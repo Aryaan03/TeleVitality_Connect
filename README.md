@@ -9,3 +9,5 @@
 #### Aryaan Shaikh - am.shaikh@ufl.edu --> Front-end Role
 
 #### Yasir Khan - y.khan@ufl.edu --> Back-end Role
+
+#### Ruchita Potamsetti - potamsetvssruchi@ufl.edu --> Back-end Role
