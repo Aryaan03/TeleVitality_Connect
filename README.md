@@ -10,12 +10,12 @@ TeleVitality Connect will be a telemedicine platform designed for healthcare del
 
 ### Features:
 
-i) User authentication and authorization (with role-based access control)
-ii) Patient and doctor profiles
-iii) Appointment scheduling and management
-iv) Secure video consultations using WebRTC
-v) Electronic health records (EHR) management
-vi) Prescription and medication tracking
+i) User authentication and authorization (with role-based access control) <br>
+ii) Patient and doctor profiles <br>
+iii) Appointment scheduling and management <br>
+iv) Secure video consultations using WebRTC <br>
+v) Electronic health records (EHR) management <br>
+vi) Prescription and medication tracking <br>
 vii) Billing and payment gateway integration
 
 ## Team Members
