@@ -1,4 +1,4 @@
-# SE_Mood_Menders
+# Team_Mood_Menders
 
 ## Project Name
 TeleVitality Connect
