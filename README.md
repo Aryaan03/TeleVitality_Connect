@@ -6,21 +6,23 @@
 
 ## Project Description
 
-TeleVitality Connect will be a telemedicine platform designed for healthcare delivery by seamlessly connecting patients with healthcare providers remotely. This solution aims to improve access to medical care, enhance patient outcomes, and streamline healthcare processes through advanced technology. The platform will utilize video and audio technology to ensure clear and uninterrupted communication, creating an experience that closely mimics in-person visits. The video consultation system will also support screen sharing capabilities, allowing healthcare providers to review medical images, test results, and other relevant information with patients during the virtual visit, fostering a collaborative and informative healthcare experience.
+TeleVitality Connect is a comprehensive telemedicine platform designed to transform healthcare delivery by offering a wide range of features that connect patients and healthcare providers seamlessly. The platform aims to improve healthcare accessibility, enhance operational efficiency, and empower both patients and providers with intuitive tools.
+
+TeleVitality Connect integrates advanced functionalities such as patient appointment scheduling, electronic health record (EHR) management, and secure video consultations powered by WebRTC, ensuring a well-rounded virtual care experience. Additionally, features like prescription tracking, billing, and payment gateway integration simplify administrative workflows, enabling providers to focus on delivering quality care.
 
 ### Features:
 
-i) User authentication and authorization (with role-based access control) <br>
-ii) Patient and doctor profiles <br>
-iii) Appointment scheduling and management <br>
-iv) Secure video consultations using WebRTC <br>
-v) Electronic health records (EHR) management <br>
-vi) Prescription and medication tracking <br>
-vii) Billing and payment gateway integration
+- User Authentication & Authorization: Secure, role-based access for patients, providers, and administrators.
+- Patient and Doctor Profiles: Centralized and customizable profiles for streamlined management.
+- Appointment Scheduling and Management: Easy booking, rescheduling, and reminders for improved time management.
+- Electronic Health Records (EHR): Centralized, secure access to patient histories and records.
+- Secure Video Consultations: High-quality, real-time communication with integrated screen sharing for collaborative care.
+- Prescription and Medication Tracking: End-to-end management of prescriptions, including refills and reminders.
+- Billing and Payment Gateway Integration: Streamlined financial transactions with multiple payment options.
 
 ## Team Members
 
-#### Aryaan Shaikh - am.shaikh@ufl.edu --> Front-end Role
-#### Yasir Khan - y.khan@ufl.edu --> Back-end Role
-#### Ruchita Potamsetti - potamsetvssruchi@ufl.edu --> Back-end Role
-#### Swaroopa Thimmanagoundla - swaroopathimmana@ufl.edu --> Front-end Role
+- Aryaan Shaikh - am.shaikh@ufl.edu --> Front-end Role
+- Swaroopa Thimmanagoundla - swaroopathimmana@ufl.edu --> Front-end Role
+- Yasir Khan - y.khan@ufl.edu --> Back-end Role
+- Ruchita Potamsetti - potamsetvssruchi@ufl.edu --> Back-end Role
