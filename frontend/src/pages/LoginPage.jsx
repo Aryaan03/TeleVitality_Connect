@@ -61,7 +61,12 @@ export default function LoginPage() {
               error={touched.password && !!errors.password}
               helperText={touched.password && errors.password}
             />
-
+            <Box 
+              sx={{color:"#1976d2", fontSize:"14px", marginLeft:'2px', cursor: 'pointer'}}
+              onClick={() => navigate('/forgot-password')}
+            >
+              Forgot Password?
+            </Box>
             <Button 
               type="submit" 
               variant="contained" 

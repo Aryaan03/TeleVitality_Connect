@@ -21,6 +21,7 @@ func main() {
 	// Routes
 	r.HandleFunc("/api/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/api/login", authHandler.Login).Methods("POST")
+	r.HandleFunc("/api/reset-password", authHandler.ResetPassword).Methods("POST")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

@@ -82,3 +82,41 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Login successful"})
 }
+
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var resetData struct {
+		Email       string `json:"email"`
+		NewPassword string `json:"newPassword"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&resetData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// check if user already exists
+	var exists bool
+	err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)", resetData.Email).Scan(&exists)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if !exists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(resetData.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.DB.Exec("UPDATE users SET password_hash = $1 WHERE email = $2", hashedPassword, resetData.Email)
+	if err != nil {
+		http.Error(w, "Error updating password", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password reset successfully"})
+}
