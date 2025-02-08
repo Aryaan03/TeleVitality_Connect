@@ -22,15 +22,14 @@ export default function LoginPage() {
       )}
 
       <Formik
-        initialValues={{ email: '', password: '' }}
+        initialValues={{ username: '', password: '' }} // Change from email to username
         validationSchema={Yup.object({
-          email: Yup.string().email('Invalid email').required('Required'),
+          username: Yup.string().required('Required'), // Change from email to username
           password: Yup.string().required('Required'),
         })}
         onSubmit={async (values, { setSubmitting }) => {
           try {
             const response = await authService.login(values);
-            // Store token if your backend sends it
             localStorage.setItem('token', response.token);
             navigate('/dashboard');
           } catch (err) {
@@ -44,12 +43,12 @@ export default function LoginPage() {
           <Form>
             <Field
               as={TextField}
-              name="email"
-              label="Email"
+              name="username" // Change from email to username
+              label="Username" // Change from email to username
               fullWidth
               margin="normal"
-              error={touched.email && !!errors.email}
-              helperText={touched.email && errors.email}
+              error={touched.username && !!errors.username}
+              helperText={touched.username && errors.username}
             />
             
             <Field

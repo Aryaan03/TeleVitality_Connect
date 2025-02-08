@@ -1,27 +1,7 @@
 const API_URL = 'http://localhost:8080/api';
 
 export const authService = {
-  async register(userData) {
-    try {
-      const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Registration failed");
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  },
-
+  
   async login(credentials) {
     try {
       const response = await fetch(`${API_URL}/login`, {
@@ -31,13 +11,34 @@ export const authService = {
         },
         body: JSON.stringify(credentials),
       });
-
+  
+      const data = await response.json(); // Always parse the response as JSON
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        throw new Error(data.error || "Login failed");
       }
-
-      return await response.json();
+  
+      return data;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+  
+  async register(userData) {
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+  
+      const data = await response.json(); // Always parse the response as JSON
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+  
+      return data;
     } catch (error) {
       throw new Error(error.message);
     }
