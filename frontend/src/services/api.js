@@ -52,12 +52,20 @@ export const authService = {
         body: JSON.stringify({ email, newPassword }),
       });
 
-      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error(data.error || "Password reset failed");
+        if(response.status == 404){
+          throw new Error("User not found")
+        }
+        else{
+          throw new Error("Password reset failed");
+        }
+      }
+      else{
+        const data = await response.json();
+        return data;
       }
 
-      return data;
     } catch (error) {
       throw new Error(error.message);
     }

@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import Contact from './pages/Contact';
 import ProtectedRoute from './components/ProtectedRoute'; 
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           } 
         />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/forgot-password" element={<ForgotPassword/>}/>
       </Routes>
     </BrowserRouter>
   );

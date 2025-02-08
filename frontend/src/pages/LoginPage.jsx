@@ -71,7 +71,12 @@ export default function LoginPage() {
             >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
-
+            <Typography 
+              sx={{color:"#1976d2", fontSize:"14px", fontWeight:'bold', marginTop:'4px', cursor: 'pointer'}}
+              onClick={() => navigate('/forgot-password')}
+            >
+              Forgot Password?
+            </Typography>
             <Typography sx={{ mt: 2, textAlign: 'center' }}>
               Don't have an account?{' '}
               <Link 

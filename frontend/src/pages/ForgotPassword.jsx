@@ -17,25 +17,27 @@ const ForgotPassword = () => {
       setError("Passwords don't match");
       return;
     }
-    try {
-      await authService.resetPassword({ email, newPassword });
-      setSuccessMessage('Password reset successful. Redirecting to login...');
-      setError('');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000); 
-    } catch (err) {
-      setError(err.message);
-      setSuccessMessage('');
+    else{
+      try {
+        await authService.resetPassword(email, newPassword );
+        setSuccessMessage('Password reset successful. Redirecting to login...');
+        setError('');
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000); 
+      } catch (err) {
+        setError(err.message);
+        setSuccessMessage('');
+      }
     }
   };
 
   return (
     <Container component="main" maxWidth="xs">
       <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography component="h1" variant="h5">
-          Forgot Password
-        </Typography>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+        Forgot Password
+      </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
