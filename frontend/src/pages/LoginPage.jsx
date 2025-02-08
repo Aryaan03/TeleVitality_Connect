@@ -2,7 +2,6 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { Button, TextField, Box, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { mockLogin } from '../utils/api';
 
 export default function LoginPage() {
   return (
