@@ -1,10 +1,13 @@
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Button, TextField, Box, Typography, FormControlLabel, Checkbox, Link } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Button, TextField, Box, Typography, FormControlLabel, Checkbox, Alert } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { authService } from '../services/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   return (
     <Box sx={{ maxWidth: 400, margin: 'auto' }}>
@@ -12,43 +15,59 @@ export default function RegisterPage() {
         Patient Registration
       </Typography>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Formik
         initialValues={{ 
-          UserName: '',
+          username: '',
           email: '',
           password: '',
           confirmPassword: '',
           consentTelemedicine: false
         }}
         validationSchema={Yup.object({
-          UserName: Yup.string().required('Required'),
+          username: Yup.string().required('Required'),
           email: Yup.string().email('Invalid email').required('Required'),
-          password: Yup.string().required('Required'),
+          password: Yup.string()
+            .min(8, 'Password must be at least 8 characters')
+            .required('Required'),
           confirmPassword: Yup.string()
             .oneOf([Yup.ref('password')], 'Passwords must match')
             .required('Required'),
           consentTelemedicine: Yup.boolean()
             .oneOf([true], 'You must agree to the terms and conditions')
         })}
-        onSubmit={(values) => {
-          console.log(values); // Replace with actual registration logic
-          navigate('/login'); // Redirect to login after registration
+        onSubmit={async (values, { setSubmitting }) => {
+          try {
+            await authService.register({
+              username: values.username,
+              email: values.email,
+              password: values.password
+            });
+            navigate('/login');
+          } catch (err) {
+            setError(err.message || 'Registration failed. Please try again.');
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
-        {({ errors, touched }) => (
+        {({ errors, touched, isSubmitting }) => (
           <Form>
-            {/* User Name Field */}
             <Field
               as={TextField}
-              name="UserName"
-              label="User Name"
+              name="username"
+              label="Username"
               fullWidth
               margin="normal"
-              error={touched.UserName && !!errors.UserName}
-              helperText={touched.UserName && errors.UserName}
+              error={touched.username && !!errors.username}
+              helperText={touched.username && errors.username}
             />
 
-            {/* Email Field */}
             <Field
               as={TextField}
               name="email"
@@ -59,7 +78,6 @@ export default function RegisterPage() {
               helperText={touched.email && errors.email}
             />
 
-            {/* Password Field */}
             <Field
               as={TextField}
               name="password"
@@ -71,7 +89,6 @@ export default function RegisterPage() {
               helperText={touched.password && errors.password}
             />
 
-            {/* Confirm Password Field */}
             <Field
               as={TextField}
               name="confirmPassword"
@@ -83,7 +100,6 @@ export default function RegisterPage() {
               helperText={touched.confirmPassword && errors.confirmPassword}
             />
 
-            {/* Telemedicine Consent Checkbox */}
             <FormControlLabel
               control={
                 <Field
@@ -94,7 +110,7 @@ export default function RegisterPage() {
               }
               label={
                 <Typography variant="body2">
-                  I agree to the terms and conditions of telemedicine services, including privacy and data security compliance.
+                  I agree to the terms and conditions of telemedicine services
                 </Typography>
               }
             />
@@ -104,22 +120,25 @@ export default function RegisterPage() {
               </Typography>
             )}
 
-            {/* Register Button */}
             <Button 
               type="submit" 
               variant="contained" 
               fullWidth
+              disabled={isSubmitting}
               sx={{ mt: 3 }}
             >
-              Register
+              {isSubmitting ? 'Registering...' : 'Register'}
             </Button>
 
-            {/* Redirect to Login */}
             <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
               Already have an account?{' '}
               <Link 
-                href="/login" 
-                sx={{ fontWeight: 'bold', textDecoration: 'none' }}
+                to="/login" 
+                style={{ 
+                  textDecoration: 'none', 
+                  color: '#1976d2',
+                  fontWeight: 'bold'
+                }}
               >
                 Login
               </Link>

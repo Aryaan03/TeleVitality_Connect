@@ -1,26 +1,46 @@
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Button, TextField, Box, Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Button, TextField, Box, Typography, Alert } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { authService } from '../services/api';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
   return (
     <Box sx={{ maxWidth: 400, margin: 'auto' }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-      <h1>Patient Login</h1></Typography>
+        Patient Login
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Formik
         initialValues={{ email: '', password: '' }}
         validationSchema={Yup.object({
           email: Yup.string().email('Invalid email').required('Required'),
           password: Yup.string().required('Required'),
         })}
-        onSubmit={async (values) => {
-          const response = await mockLogin(values);
-          localStorage.setItem('token', response.token);
-          window.location = '/dashboard';
+        onSubmit={async (values, { setSubmitting }) => {
+          try {
+            const response = await authService.login(values);
+            // Store token if your backend sends it
+            localStorage.setItem('token', response.token);
+            navigate('/dashboard');
+          } catch (err) {
+            setError(err.message || 'Login failed. Please try again.');
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
-        {({ errors, touched }) => (
+        {({ errors, touched, isSubmitting }) => (
           <Form>
             <Field
               as={TextField}
@@ -47,12 +67,12 @@ export default function LoginPage() {
               type="submit" 
               variant="contained" 
               fullWidth
+              disabled={isSubmitting}
               sx={{ mt: 3 }}
             >
-              Login
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
 
-            {/* Add registration redirect */}
             <Typography sx={{ mt: 2, textAlign: 'center' }}>
               Don't have an account?{' '}
               <Link 
