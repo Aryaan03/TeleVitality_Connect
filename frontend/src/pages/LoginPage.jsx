@@ -1,45 +1,27 @@
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Button, TextField, Box, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
-import { useState } from 'react';
+import { Button, TextField, Box, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { mockLogin } from '../utils/api';
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
-
   return (
     <Box sx={{ maxWidth: 400, margin: 'auto' }}>
-      <h1>Patient Login</h1>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+      <h1>Patient Login</h1></Typography>
       <Formik
         initialValues={{ email: '', password: '' }}
         validationSchema={Yup.object({
-          email: Yup.string()
-            .email('Invalid email address')
-            .required('Required'),
-          password: Yup.string()
-            .required('Required'),
+          email: Yup.string().email('Invalid email').required('Required'),
+          password: Yup.string().required('Required'),
         })}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            const response = await authService.login(values);
-            // If you implement JWT token in the future:
-            // localStorage.setItem('token', response.token);
-            navigate('/dashboard');
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setSubmitting(false);
-          }
+        onSubmit={async (values) => {
+          const response = await mockLogin(values);
+          localStorage.setItem('token', response.token);
+          window.location = '/dashboard';
         }}
       >
-        {({ errors, touched, isSubmitting }) => (
+        {({ errors, touched }) => (
           <Form>
             <Field
               as={TextField}
@@ -61,21 +43,30 @@ export default function LoginPage() {
               error={touched.password && !!errors.password}
               helperText={touched.password && errors.password}
             />
-            <Box 
-              sx={{color:"#1976d2", fontSize:"14px", marginLeft:'2px', cursor: 'pointer'}}
-              onClick={() => navigate('/forgot-password')}
-            >
-              Forgot Password?
-            </Box>
+
             <Button 
               type="submit" 
               variant="contained" 
               fullWidth
-              disabled={isSubmitting}
               sx={{ mt: 3 }}
             >
-              {isSubmitting ? 'Logging in...' : 'Login'}
+              Login
             </Button>
+
+            {/* Add registration redirect */}
+            <Typography sx={{ mt: 2, textAlign: 'center' }}>
+              Don't have an account?{' '}
+              <Link 
+                to="/register" 
+                style={{ 
+                  textDecoration: 'none', 
+                  color: '#1976d2',
+                  fontWeight: 'bold'
+                }}
+              >
+                Register
+              </Link>
+            </Typography>
           </Form>
         )}
       </Formik>
