@@ -8,25 +8,15 @@
 - **So that** I can interact with the platform based on my permissions.
 
 ### 2. Patient and Doctor Profiles
-- **As a** doctor,  
-- **I want to** create and manage my profile,  
-- **So that** patients can find relevant information about me.
-- **As a** patient,  
-- **I want to** manage my profile,  
-- **So that** I can store and update my medical information.
+- **As a** doctor, **I want to** create and manage my profile, **so that** patients can find relevant information about me.
+- **As a** patient, **I want to** manage my profile, **so that** I can store and update my medical information.
 
 ### 3. Appointment Scheduling and Management
-- **As a** patient,  
-- **I want to** schedule and manage my appointments with doctors,  
-- **So that** I can receive timely consultations.
-- **As a** doctor,  
-- **I want to** manage my schedule,  
-- **So that** I can efficiently plan my consultations.
+- **As a** patient, **I want to** schedule and manage my appointments with doctors, **so that** I can receive timely consultations.
+- **As a** doctor, **I want to** manage my schedule, **so that** I can efficiently plan my consultations.
 
 ### 4. Secure Video Consultations
-- **As a** patient or doctor,  
-- **I want to** conduct video consultations through the platform,  
-- **So that** I can receive or provide remote medical care.
+- **As a** patient or doctor, **I want to** conduct video consultations through the platform, **so that** I can receive or provide remote medical care.
 
 ---
 
