@@ -1,68 +1,51 @@
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Button, TextField, Box, Alert } from '@mui/material';
+import { Button, TextField, Box, Typography, FormControlLabel, Checkbox, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
-import { useState } from 'react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState('');
 
   return (
     <Box sx={{ maxWidth: 400, margin: 'auto' }}>
-      <h1>Patient Registration</h1>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+        Patient Registration
+      </Typography>
+
       <Formik
         initialValues={{ 
-          username: '',
+          UserName: '',
           email: '',
           password: '',
-          confirmPassword: '' 
+          confirmPassword: '',
+          consentTelemedicine: false
         }}
         validationSchema={Yup.object({
-          username: Yup.string()
-            .min(3, 'Username must be at least 3 characters')
-            .required('Required'),
+          UserName: Yup.string().required('Required'),
           email: Yup.string().email('Invalid email').required('Required'),
-          password: Yup.string()
-            .min(6, 'Password must be at least 6 characters')
-            .required('Required'),
+          password: Yup.string().required('Required'),
           confirmPassword: Yup.string()
             .oneOf([Yup.ref('password')], 'Passwords must match')
-            .required('Required')
+            .required('Required'),
+          consentTelemedicine: Yup.boolean()
+            .oneOf([true], 'You must agree to the terms and conditions')
         })}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            const registrationData = {
-              username: values.username,
-              email: values.email,
-              password: values.password
-            };
-            await authService.register(registrationData);
-            navigate('/login');
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setSubmitting(false);
-          }
+        onSubmit={(values) => {
+          console.log(values); // Replace with actual registration logic
+          navigate('/login'); // Redirect to login after registration
         }}
       >
-        {({ errors, touched, isSubmitting }) => (
+        {({ errors, touched }) => (
           <Form>
-            {/* Username Field */}
+            {/* User Name Field */}
             <Field
               as={TextField}
-              name="username"
-              label="Username"
+              name="UserName"
+              label="User Name"
               fullWidth
               margin="normal"
-              error={touched.username && !!errors.username}
-              helperText={touched.username && errors.username}
+              error={touched.UserName && !!errors.UserName}
+              helperText={touched.UserName && errors.UserName}
             />
 
             {/* Email Field */}
@@ -100,16 +83,47 @@ export default function RegisterPage() {
               helperText={touched.confirmPassword && errors.confirmPassword}
             />
 
-            {/* Submit Button */}
+            {/* Telemedicine Consent Checkbox */}
+            <FormControlLabel
+              control={
+                <Field
+                  as={Checkbox}
+                  name="consentTelemedicine"
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  I agree to the terms and conditions of telemedicine services, including privacy and data security compliance.
+                </Typography>
+              }
+            />
+            {touched.consentTelemedicine && errors.consentTelemedicine && (
+              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                {errors.consentTelemedicine}
+              </Typography>
+            )}
+
+            {/* Register Button */}
             <Button 
               type="submit" 
               variant="contained" 
               fullWidth
-              disabled={isSubmitting}
               sx={{ mt: 3 }}
             >
-              {isSubmitting ? 'Registering...' : 'Register'}
+              Register
             </Button>
+
+            {/* Redirect to Login */}
+            <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
+              Already have an account?{' '}
+              <Link 
+                href="/login" 
+                sx={{ fontWeight: 'bold', textDecoration: 'none' }}
+              >
+                Login
+              </Link>
+            </Typography>
           </Form>
         )}
       </Formik>
