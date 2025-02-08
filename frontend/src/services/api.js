@@ -1,22 +1,20 @@
 const API_URL = 'http://localhost:8080/api';
 
 export const authService = {
-  
   async login(credentials) {
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${API_URL}/login`, {  
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
       });
-  
-      const data = await response.json(); // Always parse the response as JSON
+      
+      const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Login failed");
       }
-  
       return data;
     } catch (error) {
       throw new Error(error.message);
@@ -32,34 +30,55 @@ export const authService = {
         },
         body: JSON.stringify(userData),
       });
-  
-      const data = await response.json(); // Always parse the response as JSON
+
+      const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Registration failed");
       }
-  
+
       return data;
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
-  async resetPassword(resetData) {
+  async resetPassword(email, newPassword) {
     try {
       const response = await fetch(`${API_URL}/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(resetData),
+        body: JSON.stringify({ email, newPassword }),
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Password reset failed");
+        throw new Error(data.error || "Password reset failed");
       }
 
-      return await response.json();
+      return data;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async getProtectedData(token) {
+    try {
+      const response = await fetch(`${API_URL}/protected/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch protected data");
+      }
+
+      return data;
     } catch (error) {
       throw new Error(error.message);
     }

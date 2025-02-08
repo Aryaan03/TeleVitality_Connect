@@ -18,10 +18,15 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Routes
+	// Public Routes
 	r.HandleFunc("/api/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/api/login", authHandler.Login).Methods("POST")
 	r.HandleFunc("/api/reset-password", authHandler.ResetPassword).Methods("POST")
+
+	// Protected Routes (Require JWT Authentication)
+	protected := r.PathPrefix("/api/protected").Subrouter()
+	protected.Use(handlers.JWTAuthMiddleware) // Apply middleware to all routes under /api/protected
+	protected.HandleFunc("/dashboard", authHandler.ProtectedDashboard).Methods("GET")
 
 	// CORS configuration
 	c := cors.New(cors.Options{
