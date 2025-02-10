@@ -7,21 +7,15 @@ A modern React-based frontend application built with Vite, featuring authenticat
 3. As a patient, I want to see an empty dashboard
 
 ## Implemented Features
-- Login/Registration forms with validation
-- Role-based routing
-- Basic dashboard layout
-- Navigation system
-
-## How to run 
-Use the above command to run: `npm run dev` and click on the link that comes as output from terminal.
-
-## Features
 - **Auth Pages**: Login, Register, Forgot Password
 - **Protected Routes**: Dashboard and Profile pages require authentication
 - **Navigation**: Shared navigation component
 - **Responsive**: Built with CSS styling (App.css, index.css)
 - **Routing**: React Router integration
 - **Optimized Build**: Vite-powered development environment
+
+## How to run 
+Use the above command to run: `npm run dev` and click on the link that comes as output from terminal.
 
 ## Pages Overview
 - **HomePage**: Landing page with general information
