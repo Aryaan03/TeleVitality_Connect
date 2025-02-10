@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -25,12 +26,14 @@ function App() {
         onRegisterClick={handleRegisterOpen} 
       />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage onGetStartedClick={handleRegisterOpen} onLoginClick={handleLoginOpen}/>} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route 
-          path="/dashboard" 
+          path="/profile" 
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <ProfilePage/>
             </ProtectedRoute>
           } 
         />

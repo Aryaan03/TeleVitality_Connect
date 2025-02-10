@@ -1,6 +1,6 @@
 import { Button, Stack, Box, Typography, Container, Grid, Card, CardContent } from '@mui/material';
 
-export default function HomePage() {
+export default function HomePage({ onGetStartedClick, onLoginClick }) {
   return (
     <Box sx={{ 
       display: 'flex',
@@ -24,7 +24,8 @@ export default function HomePage() {
                 variant="contained" 
                 color="secondary" 
                 size="large" 
-                href="/register"
+                // href="/register"
+                onClick={onGetStartedClick}
               >
                 Get Started
               </Button>
@@ -32,7 +33,8 @@ export default function HomePage() {
                 variant="outlined" 
                 color="inherit" 
                 size="large" 
-                href="/login"
+                // href="/login"
+                onClick={onLoginClick}
               >
                 Login
               </Button>

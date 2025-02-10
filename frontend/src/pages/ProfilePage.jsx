@@ -5,11 +5,28 @@ import {
   MenuItem, FormControlLabel, Checkbox, Alert 
 } from '@mui/material';
 import { authService } from '../services/api';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Grid from '@mui/material/Grid';
 
 export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  // const [initialValues, setInitialValues] = useState(null); // State to hold fetched profile data
+  //  // Fetch user profile data on component mount
+  //  useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) throw new Error('User not authenticated');
+  //       const profileData = await authService.getProfile(); // Fetch profile data from API
+  //       setInitialValues(profileData); // Set fetched data as initial values
+  //     } catch (err) {
+  //       setError(err.message || 'Failed to fetch profile data.');
+  //     }
+  //   };
+
+  //   fetchProfile();
+  // }, []);
 
   // Mock initial values - replace with actual data from your auth system
   const initialValues = {
@@ -45,15 +62,16 @@ export default function ProfilePage() {
   });
 
   const handleSubmit = async (values) => {
-    try {
-      await authService.updateProfile(values);
-      setSuccess('Profile updated successfully!');
-      setError('');
-    } catch (err) {
-      setError(err.message);
-      setSuccess('');
-    }
+    // try {
+    //   await authService.updateProfile(values);
+    //   setSuccess('Profile updated successfully!');
+    //   setError('');
+    // } catch (err) {
+    //   setError(err.message || 'F ailed to update profile.');
+    //   setSuccess('');
+    // }
   };
+  // if (!initialValues) return <Typography>Loading...</Typography>; // Show loading state until data is fetched
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', p: 3 }}>
@@ -68,6 +86,7 @@ export default function ProfilePage() {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
+        enableReinitialize // Reinitialize form when initialValues change
       >
         {({ errors, touched, isSubmitting }) => (
           <Form>

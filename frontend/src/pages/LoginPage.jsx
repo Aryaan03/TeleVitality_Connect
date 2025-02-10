@@ -3,9 +3,11 @@ import * as Yup from 'yup';
 import { Modal, Button, TextField, Box, Typography, Alert } from '@mui/material';
 import { useState } from 'react';
 import { authService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage({ open, handleClose }) {
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -42,7 +44,9 @@ export default function LoginPage({ open, handleClose }) {
             try {
               const response = await authService.login(values);
               localStorage.setItem('token', response.token);
-              window.location.reload(); // Refresh the page or navigate to another route
+              handleClose(); // Close modal
+              navigate('/profile'); // Redirect to profile page
+              //window.location.reload(); // Refresh the page or navigate to another route
             } catch (err) {
               setError(err.message || 'Login failed. Please try again.');
             } finally {
