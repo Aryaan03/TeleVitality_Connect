@@ -18,6 +18,8 @@
 ### 4. Secure Video Consultations
 - **As a** patient or doctor, **I want to** conduct video consultations through the platform, **so that** I can receive or provide remote medical care.
 
+### 5. Contact Support and Platform Information
+- **As a** user (patient, doctor, or administrator), **I want to** access a "Contact" page with platform details and a support form, **so that**  I can resolve issues, ask questions, or locate the organization easily.
 ---
 
 ## 🛠️ Issues Planned for This Sprint
