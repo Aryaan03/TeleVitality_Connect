@@ -1,22 +1,22 @@
 # Project Overview
 A modern React-based frontend application built with Vite, featuring authentication flows, protected routes, and multiple pages. Includes user registration, login, dashboard, and profile management functionalities.
 
-# User Stories Completed
+## User Stories Completed
 1. As a new user, I want to register with email/password
 2. As any user, I want to log in with credentials
 3. As a patient, I want to see an empty dashboard
 
-# Implemented Features
+## Implemented Features
 - Login/Registration forms with validation
 - Role-based routing
 - Basic dashboard layout
 - Navigation system
 
-# How to run 
+## How to run 
 npm run dev 
  use the above command to run and click on the link that comes as output from terminal.
 
-# Features
+## Features
 - **Auth Pages**: Login, Register, Forgot Password
 - **Protected Routes**: Dashboard and Profile pages require authentication
 - **Navigation**: Shared navigation component
@@ -24,7 +24,7 @@ npm run dev
 - **Routing**: React Router integration
 - **Optimized Build**: Vite-powered development environment
 
-# Pages Overview
+## Pages Overview
 - **HomePage**: Landing page with general information
 - **LoginPage**: User authentication form
 - **RegisterPage**: New user registration form
