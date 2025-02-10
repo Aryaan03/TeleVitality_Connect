@@ -13,8 +13,10 @@ A modern React-based frontend application built with Vite, featuring authenticat
 - Navigation system
 
 ## How to run 
-npm run dev 
- use the above command to run and click on the link that comes as output from terminal.
+Use the above command to run:<br>
+'npm run dev' 
+<br>
+and click on the link that comes as output from terminal.
 
 ## Features
 - **Auth Pages**: Login, Register, Forgot Password
