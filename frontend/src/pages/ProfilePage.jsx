@@ -11,41 +11,26 @@ import Grid from '@mui/material/Grid';
 export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  // const [initialValues, setInitialValues] = useState(null); // State to hold fetched profile data
-  //  // Fetch user profile data on component mount
-  //  useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       if (!token) throw new Error('User not authenticated');
-  //       const profileData = await authService.getProfile(); // Fetch profile data from API
-  //       setInitialValues(profileData); // Set fetched data as initial values
-  //     } catch (err) {
-  //       setError(err.message || 'Failed to fetch profile data.');
-  //     }
-  //   };
+  const [initialValues, setInitialValues] = useState(null); // Change to null initially
 
-  //   fetchProfile();
-  // }, []);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profileData = await authService.getProfile();
+        setInitialValues(profileData);
+        // Clear any existing errors since we got data successfully
+        setError('');
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Unable to load profile. Please try again later.');
+      }
+    };
 
-  // Mock initial values - replace with actual data from your auth system
-  const initialValues = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john@example.com',
-    dateOfBirth: '1990-01-01',
-    gender: 'male',
-    phoneNumber: '+1234567890',
-    address: '123 Main St, City',
-    problemDescription: 'Regular checkup required',
-    emergencyAppointment: 'no',
-    previousPatientId: '',
-    preferredCommunication: 'email',
-    preferredDoctor: 'drSmith',
-    insuranceProvider: 'HealthCare Plus',
-    insurancePolicyNumber: 'HC-123456',
-    consentTelemedicine: true
-  };
+    fetchProfile();
+  }, []);
+
+  // Show loading state if initialValues is null
+  if (initialValues === null) return <Typography>Loading...</Typography>;
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required('Required'),
@@ -62,16 +47,16 @@ export default function ProfilePage() {
   });
 
   const handleSubmit = async (values) => {
-    // try {
-    //   await authService.updateProfile(values);
-    //   setSuccess('Profile updated successfully!');
-    //   setError('');
-    // } catch (err) {
-    //   setError(err.message || 'F ailed to update profile.');
-    //   setSuccess('');
-    // }
+    try {
+      await authService.updateProfile(values);
+      setSuccess('Profile updated successfully!');
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to update profile.');
+      setSuccess('');
+    }
   };
-  // if (!initialValues) return <Typography>Loading...</Typography>; // Show loading state until data is fetched
+
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', p: 3 }}>

@@ -7,3 +7,21 @@ type User struct {
 	Password     string `json:"password,omitempty"`
 	PasswordHash string `json:"-"`
 }
+
+type Profile struct {
+	UserID                 int    `json:"userId"`
+	FirstName              string `json:"firstName"`
+	LastName               string `json:"lastName"`
+	DateOfBirth            string `json:"dateOfBirth"`
+	Gender                 string `json:"gender"`
+	PhoneNumber            string `json:"phoneNumber"`
+	Address                string `json:"address"`
+	ProblemDescription     string `json:"problemDescription"`
+	EmergencyAppointment   string `json:"emergencyAppointment"`
+	PreviousPatientId      string `json:"previousPatientId"`
+	PreferredCommunication string `json:"preferredCommunication"`
+	PreferredDoctor        string `json:"preferredDoctor"`
+	InsuranceProvider      string `json:"insuranceProvider"`
+	InsurancePolicyNumber  string `json:"insurancePolicyNumber"`
+	ConsentTelemedicine    bool   `json:"consentTelemedicine"`
+}

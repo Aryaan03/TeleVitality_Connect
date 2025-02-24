@@ -71,6 +71,78 @@ export const authService = {
     }
   },
 
+  async getProfile() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('User not authenticated');
+
+        const response = await fetch(`${API_URL}/protected/profile`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        
+        // If profile not found, return default empty profile instead of throwing error
+        if (response.status === 404) {
+          return {
+            firstName: '',
+            lastName: '',
+            email: '',
+            dateOfBirth: '',
+            gender: '',
+            phoneNumber: '',
+            address: '',
+            problemDescription: '',
+            emergencyAppointment: 'no',
+            previousPatientId: '',
+            preferredCommunication: 'email',
+            preferredDoctor: 'drSmith',
+            insuranceProvider: '',
+            insurancePolicyNumber: '',
+            consentTelemedicine: false,
+          };
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch profile data");
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        throw new Error(error.message);
+      }
+    },
+
+    async updateProfile(values) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('User not authenticated');
+
+        const response = await fetch(`${API_URL}/protected/profile`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to update profile");
+        }
+
+        return data;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+
   async getProtectedData(token) {
     try {
       const response = await fetch(`${API_URL}/protected/dashboard`, {
