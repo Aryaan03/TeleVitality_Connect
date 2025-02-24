@@ -220,3 +220,101 @@ func (h *AuthHandler) ProtectedDashboard(w http.ResponseWriter, r *http.Request)
 		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
 	}
 }
+
+func (h *AuthHandler) DoctorLogin(w http.ResponseWriter, r *http.Request) {
+	var credentials struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	var doctor models.Doctor
+	err := h.DB.QueryRow("SELECT id, username, password_hash FROM doctors WHERE username=$1", credentials.Username).Scan(&doctor.ID, &doctor.Username, &doctor.PasswordHash)
+	if err == sql.ErrNoRows {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
+		return
+	}
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(doctor.PasswordHash), []byte(credentials.Password)); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
+		return
+	}
+
+	// Create a JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": doctor.Username,
+		"user_id":  doctor.ID,
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		http.Error(w, `{"error": "Error generating token"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Login successful",
+		"token":   tokenString,
+	})
+}
+
+func (h *AuthHandler) DoctorRegister(w http.ResponseWriter, r *http.Request) {
+	var doctor models.Doctor
+	if err := json.NewDecoder(r.Body).Decode(&doctor); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Check if username already exists
+	var usernameExists bool
+	err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM doctors WHERE username=$1)", doctor.Username).Scan(&usernameExists)
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+	if usernameExists {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Username already exists"})
+		return
+	}
+
+	// Check if email already exists
+	var emailExists bool
+	err = h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM doctors WHERE email=$1)", doctor.Email).Scan(&emailExists)
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+	if emailExists {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Email already exists"})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(doctor.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, `{"error": "Error hashing password"}`, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.DB.Exec("INSERT INTO doctors (username, email, password_hash) VALUES ($1, $2, $3)", doctor.Username, doctor.Email, string(hashedPassword))
+	if err != nil {
+		http.Error(w, `{"error": "Error creating user"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "User created successfully"})
+}

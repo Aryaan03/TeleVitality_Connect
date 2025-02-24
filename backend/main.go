@@ -24,6 +24,9 @@ func main() {
 	r.HandleFunc("/api/login", authHandler.Login).Methods("POST")
 	r.HandleFunc("/api/reset-password", authHandler.ResetPassword).Methods("POST")
 
+	r.HandleFunc("/api/docregister", authHandler.DoctorRegister).Methods("POST")
+	r.HandleFunc("/api/doclogin", authHandler.DoctorLogin).Methods("POST")
+
 	// Protected Routes (Require JWT Authentication)
 	protected := r.PathPrefix("/api/protected").Subrouter()
 	protected.Use(handlers.JWTAuthMiddleware)
