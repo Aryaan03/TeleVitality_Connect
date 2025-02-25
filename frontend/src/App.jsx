@@ -77,12 +77,12 @@ function App() {
 
       {/* Patient Registration Modal */}
       {isPatientRegisterOpen && (
-        <RegisterPage open={isPatientRegisterOpen} handleClose={handlePatientRegisterClose} />
+        <RegisterPage open={isPatientRegisterOpen} handleClose={handlePatientRegisterClose} openLogin={()=>setIsPatientLoginOpen(true)}/>
       )}
 
       {/* Doctor Registration Modal */}
       {isDoctorRegisterOpen && (
-        <DoctorRegisterPage open={isDoctorRegisterOpen} handleClose={handleDoctorRegisterClose} />
+        <DoctorRegisterPage open={isDoctorRegisterOpen} handleClose={handleDoctorRegisterClose} openLogin={()=>setIsDoctorLoginOpen(true)} />
       )}
 
       {isPatientLoginOpen && (

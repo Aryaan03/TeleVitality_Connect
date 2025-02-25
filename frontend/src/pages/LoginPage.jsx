@@ -44,6 +44,7 @@ export default function LoginPage({ open, handleClose }) {
             try {
               const response = await authService.login(values);
               localStorage.setItem('token', response.token);
+              localStorage.setItem('role', "patient");
               handleClose(); // Close modal
               navigate('/profile'); // Redirect to profile page
               //window.location.reload(); // Refresh the page or navigate to another route

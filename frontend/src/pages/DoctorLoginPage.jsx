@@ -44,6 +44,7 @@ export default function DoctorLoginPage({ open, handleClose }) {
             try {
               const response = await authService.doclogin(values);
               localStorage.setItem('token', response.token);
+              localStorage.setItem('role', "doctor")
               handleClose(); // Close modal
               navigate('/doctor-profile'); // Redirect to profile page
               //window.location.reload(); // Refresh the page or navigate to another route

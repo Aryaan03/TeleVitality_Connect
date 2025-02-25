@@ -101,6 +101,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"user_id":  user.ID,
+		"role":     "patient",
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 
@@ -117,35 +118,68 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func JWTAuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header missing"})
-			return
-		}
-		tokenString := strings.Split(authHeader, " ")[1]
-		if tokenString == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Token missing"})
-			return
-		}
-		// parse and validate token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+func JWTAuthMiddleware(allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header missing"})
+				return
 			}
-			return jwtSecret, nil
-		})
-		if err != nil || !token.Valid {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
-			return
-		}
 
-		next.ServeHTTP(w, r)
-	})
+			tokenString := strings.Split(authHeader, " ")[1]
+			if tokenString == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Token missing"})
+				return
+			}
+			// parse and validate token
+			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				}
+				return jwtSecret, nil
+			})
+
+			if err != nil || !token.Valid {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
+				return
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok || !token.Valid {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token claims"})
+				return
+			}
+
+			role, ok := claims["role"].(string)
+			if !ok {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token format"})
+				return
+			}
+
+			// Check if the role is allowed
+			allowed := false
+			for _, allowedRole := range allowedRoles {
+				if role == allowedRole {
+					allowed = true
+					break
+				}
+			}
+
+			if !allowed {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Forbidden"})
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -254,6 +288,7 @@ func (h *AuthHandler) DoctorLogin(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": doctor.Username,
 		"user_id":  doctor.ID,
+		"role":     "doctor",
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 

@@ -4,7 +4,7 @@ import { Modal, Button, TextField, Box, Typography, FormControlLabel, Checkbox, 
 import { useState } from 'react';
 import { authService } from '../services/api';
 
-export default function DoctorRegisterPage({ open, handleClose }) {
+export default function DoctorRegisterPage({ open, handleClose, openLogin }) {
   const [error, setError] = useState('');
 
   return (
@@ -60,6 +60,7 @@ export default function DoctorRegisterPage({ open, handleClose }) {
                 password: values.password
               });
               handleClose(); // Close the modal after successful registration
+              openLogin();
             } catch (err) {
               setError(err.message || 'Registration failed. Please try again.');
             } finally {

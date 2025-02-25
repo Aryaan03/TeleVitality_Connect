@@ -27,12 +27,18 @@ func main() {
 	r.HandleFunc("/api/docregister", authHandler.DoctorRegister).Methods("POST")
 	r.HandleFunc("/api/doclogin", authHandler.DoctorLogin).Methods("POST")
 
-	// Protected Routes (Require JWT Authentication)
+	// Protected Patient Routes (Require JWT Authentication)
 	protected := r.PathPrefix("/api/protected").Subrouter()
-	protected.Use(handlers.JWTAuthMiddleware)
-	protected.HandleFunc("/dashboard", authHandler.ProtectedDashboard).Methods("GET")
-	protected.HandleFunc("/profile", profileHandler.GetProfile).Methods("GET")
-	protected.HandleFunc("/profile", profileHandler.UpdateProfile).Methods("PUT")
+	protected.Handle("/dashboard", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(authHandler.ProtectedDashboard))).Methods("GET")
+	protected.Handle("/profile", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(profileHandler.GetProfile))).Methods("GET")
+	protected.Handle("/profile", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(profileHandler.UpdateProfile))).Methods("PUT")
+
+	// Protected Doctor Routes (Require JWT Authentication) (TO BE IMPLEMENTED)
+	// doctorRoutes := r.PathPrefix("/api/doctor").Subrouter()
+	// doctorRoutes.Use(handlers.JWTAuthMiddleware("doctor")) // Apply Doctor Role Middleware
+	// doctorRoutes.HandleFunc("/dashboard", authHandler.ProtectedDashboard).Methods("GET")
+	// doctorRoutes.HandleFunc("/profile", profileHandler.GetProfile).Methods("GET")
+	// doctorRoutes.HandleFunc("/profile", profileHandler.UpdateProfile).Methods("PUT")
 
 	// CORS configuration
 	c := cors.New(cors.Options{
