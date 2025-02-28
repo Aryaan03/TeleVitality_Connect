@@ -7,14 +7,27 @@ import {
   Typography,
   MenuItem,
   Alert,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
+import DoctorAvailabilityCalendar from '../components/DoctorAvailabilityCalendar';
 
 export default function DoctorProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [initialValues, setInitialValues] = useState(null);
+  // State to track doctor's availability
+  const [availability, setAvailability] = useState({
+    Monday: false,
+    Tuesday: false,
+    Wednesday: false,
+    Thursday: false,
+    Friday: false,
+    Saturday: false,
+    Sunday: false,
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -71,6 +84,13 @@ export default function DoctorProfilePage() {
     console.log('Submitted values:', values);
     setSuccess('Profile updated successfully!');
     setError('');
+  };
+
+  const handleDayChange = (day) => {
+    setAvailability((prev) => ({
+      ...prev,
+      [day]: !prev[day],
+    }));
   };
 
   return (
@@ -194,17 +214,28 @@ export default function DoctorProfilePage() {
                   helperText={touched.licenseExpiryDate && errors.licenseExpiryDate}
                 />
               </Grid>
+              {/* Specialization Dropdown */}
               <Grid item xs={12} md={6}>
                 <Field
                   as={TextField}
                   name="specialization"
                   label="Specialization"
+                  select // This makes it a dropdown menu
                   fullWidth
                   margin="normal"
                   error={touched.specialization && !!errors.specialization}
                   helperText={touched.specialization && errors.specialization}
-                />
+                >
+                  {/* Specialization Options */}
+                  <MenuItem value="Cardiology">Cardiology</MenuItem>
+                  <MenuItem value="Dermatology">Dermatology</MenuItem>
+                  <MenuItem value="Neurology">Neurology</MenuItem>
+                  <MenuItem value="Pediatrics">Pediatrics</MenuItem>
+                  <MenuItem value="Psychiatry">Psychiatry</MenuItem>
+                  <MenuItem value="Radiology">Radiology</MenuItem>
+                </Field>
               </Grid>
+
               <Grid item xs={12} md={6}>
                 <Field
                   as={TextField}
@@ -241,6 +272,32 @@ export default function DoctorProfilePage() {
                 />
               </Grid>
             </Grid>
+            {/* Availability Section */}
+            <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+              Set Your Availability
+            </Typography>
+            <Grid container spacing={2}>
+              {Object.keys(availability).map((day) => (
+                <Grid item xs={6} sm={4} key={day}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={availability[day]}
+                        onChange={() => handleDayChange(day)}
+                      />
+                    }
+                    label={day}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Calendar Display */}
+            <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+              Your Availability Calendar
+            </Typography>
+            <DoctorAvailabilityCalendar availability={availability} />
+
 
             <Button type="submit" variant="contained" size="large" sx={{ mt: 3 }}>
               Save Profile
