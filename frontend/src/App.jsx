@@ -13,6 +13,7 @@ import DoctorAppointmentsPage from './pages/DoctorAppointmentsPage'; // Doctor A
 import OptionsModal from './components/OptionsModal'; // Modal for registration options
 import DoctorLoginPage from './pages/DoctorLoginPage';
 import ProfilePage from './pages/ProfilePage'; // Patient Profile Page
+import MakeAppointmentPage from './pages/MakeAppointmentPage';
 
 function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -53,6 +54,7 @@ function App() {
           </ProtectedRoute>
         }/>
         {/* Protected routes */}
+        <Route path="/appointments" element={<ProtectedRoute>  <MakeAppointmentPage /></ProtectedRoute>} />
         <Route path="/doctor-profile" element={<ProtectedRoute><DoctorProfilePage /></ProtectedRoute>} />
         <Route path="/doctor-appointments" element={<ProtectedRoute><DoctorAppointmentsPage /></ProtectedRoute>} />
       </Routes>
