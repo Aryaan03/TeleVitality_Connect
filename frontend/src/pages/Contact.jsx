@@ -1,10 +1,7 @@
 import { Button, TextField, Box, Typography, Grid, Paper, Stack, Divider } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import PhoneIcon from '@mui/icons-material/Phone';
-import EmailIcon from '@mui/icons-material/Email';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import WarningIcon from '@mui/icons-material/Warning';
+import { Phone, Email, LocationOn, Warning, Send } from '@mui/icons-material';
 
 // Validation Schema
 const contactSchema = Yup.object().shape({
@@ -16,15 +13,43 @@ const contactSchema = Yup.object().shape({
 
 export default function ContactPage() {
   return (
-    <Box sx={{ maxWidth: 1200, margin: 'auto', p: 4 }}>
-      <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+    <Box sx={{ 
+      maxWidth: 1200, 
+      margin: 'auto', 
+      p: 4,
+      background: 'linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%)'
+    }}>
+      <Typography 
+        variant="h3" 
+        gutterBottom 
+        sx={{ 
+          fontWeight: 'bold', 
+          color: 'primary.main',
+          textAlign: 'center',
+          mb: 6,
+          position: 'relative',
+          '&:after': {
+            content: '""',
+            display: 'block',
+            width: '80px',
+            height: '4px',
+            backgroundColor: 'secondary.main',
+            margin: '20px auto 0'
+          }
+        }}
+      >
         Contact TeleVitality Connect
       </Typography>
 
       <Grid container spacing={4}>
         {/* Contact Form */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3 }}>
+          <Paper elevation={4} sx={{ 
+            p: 4, 
+            borderRadius: 3,
+            background: 'white',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
+          }}>
             <Formik
               initialValues={{ name: '', email: '', subject: '', message: '' }}
               validationSchema={contactSchema}
@@ -40,8 +65,10 @@ export default function ContactPage() {
                     label="Full Name"
                     fullWidth
                     margin="normal"
+                    variant="outlined"
                     error={touched.name && !!errors.name}
                     helperText={touched.name && errors.name}
+                    sx={{ mb: 3 }}
                   />
 
                   <Field
@@ -50,8 +77,10 @@ export default function ContactPage() {
                     label="Email"
                     fullWidth
                     margin="normal"
+                    variant="outlined"
                     error={touched.email && !!errors.email}
                     helperText={touched.email && errors.email}
+                    sx={{ mb: 3 }}
                   />
 
                   <Field
@@ -60,8 +89,10 @@ export default function ContactPage() {
                     label="Subject"
                     fullWidth
                     margin="normal"
+                    variant="outlined"
                     error={touched.subject && !!errors.subject}
                     helperText={touched.subject && errors.subject}
+                    sx={{ mb: 3 }}
                   />
 
                   <Field
@@ -69,18 +100,30 @@ export default function ContactPage() {
                     name="message"
                     label="Your Message"
                     multiline
-                    rows={4}
+                    rows={6}
                     fullWidth
                     margin="normal"
+                    variant="outlined"
                     error={touched.message && !!errors.message}
                     helperText={touched.message && errors.message}
+                    sx={{ mb: 3 }}
                   />
 
                   <Button 
                     type="submit" 
                     variant="contained" 
-                    size="large" 
-                    sx={{ mt: 2 }}
+                    size="large"
+                    startIcon={<Send />}
+                    sx={{ 
+                      mt: 2,
+                      px: 5,
+                      borderRadius: '50px',
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 3
+                      }
+                    }}
                   >
                     Send Message
                   </Button>
@@ -92,16 +135,36 @@ export default function ContactPage() {
 
         {/* Contact Information */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Paper elevation={4} sx={{ 
+            p: 4, 
+            height: '100%',
+            borderRadius: 3,
+            background: 'white',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
+          }}>
+            <Typography 
+              variant="h5" 
+              gutterBottom 
+              sx={{ 
+                fontWeight: 'bold',
+                mb: 4,
+                color: 'primary.main'
+              }}
+            >
               Reach Us Directly
             </Typography>
 
-            <Stack spacing={3}>
+            <Stack spacing={4}>
               {/* Emergency Alert */}
-              <Paper sx={{ p: 2, bgcolor: '#fff3e0' }}>
+              <Paper sx={{ 
+                p: 3, 
+                bgcolor: '#fff3e0',
+                borderRadius: 2,
+                borderLeft: '4px solid',
+                borderColor: 'warning.main'
+              }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                  <WarningIcon color="warning" />
+                  <Warning color="warning" sx={{ fontSize: '2rem' }} />
                   <Box>
                     <Typography variant="subtitle1" color="error">
                       For Medical Emergencies
@@ -114,29 +177,38 @@ export default function ContactPage() {
               </Paper>
 
               {/* Contact Details */}
-              <Divider />
-              <Stack spacing={2}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <PhoneIcon color="primary" />
+              <Stack spacing={3}>
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <Phone color="primary" sx={{ fontSize: '2rem' }} />
                   <Box>
-                    <Typography variant="subtitle1">General Inquiries</Typography>
-                    <Typography variant="h6">+1 (352) 123-4567</Typography>
+                    <Typography variant="subtitle1" color="text.secondary">
+                      General Inquiries
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                      +1 (352) 123-4567
+                    </Typography>
                   </Box>
                 </Stack>
 
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <EmailIcon color="primary" />
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <Email color="primary" sx={{ fontSize: '2rem' }} />
                   <Box>
-                    <Typography variant="subtitle1">Email</Typography>
-                    <Typography variant="h6">support@televitality.com</Typography>
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Email
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                      support@televitality.com
+                    </Typography>
                   </Box>
                 </Stack>
 
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <LocationOnIcon color="primary" />
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <LocationOn color="primary" sx={{ fontSize: '2rem' }} />
                   <Box>
-                    <Typography variant="subtitle1">Main Hospital</Typography>
-                    <Typography variant="h6">
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Main Hospital
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                       123 Reitz Union<br />
                       Gainesville, FL 32608
                     </Typography>
@@ -145,10 +217,20 @@ export default function ContactPage() {
               </Stack>
 
               {/* Map Embed */}
-              <Divider />
-              <Box sx={{ height: 200, bgcolor: '#f5f5f5', mt: 2 }}>
-                {/* Replace with actual map component */}
-                <Typography align="center" sx={{ pt: 8 }}>
+              <Box sx={{ 
+                height: 250, 
+                bgcolor: '#f5f5f5', 
+                borderRadius: 2,
+                overflow: 'hidden',
+                position: 'relative'
+              }}>
+                <Typography align="center" sx={{ 
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  color: 'text.secondary'
+                }}>
                   [Map Integration Here]
                 </Typography>
               </Box>
@@ -157,30 +239,36 @@ export default function ContactPage() {
         </Grid>
       </Grid>
       
-      <Box sx={{ mt: 8 }} />
-
+      {/* Footer */}
       <Paper 
         component="footer" 
-        elevation={3} 
+        elevation={4} 
         sx={{ 
-          mt: 'auto', 
-          py: 3,
-          backgroundColor: '#f5f5f5',
-          borderRadius: 2
+          mt: 8,
+          p: 4,
+          backgroundColor: 'white',
+          borderRadius: 3,
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
         }}
       >
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 'bold', 
+              mb: 2,
+              color: 'primary.main'
+            }}
+          >
             Office Hours
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" color="text.secondary">
             Monday-Friday: 8:00 AM - 8:00 PM EST<br />
             Saturday: 9:00 AM - 5:00 PM EST<br />
             Sunday: Closed
           </Typography>
         </Box>
       </Paper>
-
     </Box>
   );
 }
