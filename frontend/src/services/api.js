@@ -93,96 +93,90 @@ export const authService = {
         body: JSON.stringify({ email, newPassword }),
       });
 
-      
       if (!response.ok) {
-        if(response.status == 404){
-          throw new Error("User not found")
+        if(response.status === 404) {
+          throw new Error("User not found");
         }
-        else{
-          throw new Error("Password reset failed");
-        }
+        throw new Error("Password reset failed");
       }
-      else{
-        const data = await response.json();
-        return data;
-      }
-
+      return await response.json();
     } catch (error) {
       throw new Error(error.message);
     }
   },
 
   async getProfile() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('User not authenticated');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('User not authenticated');
 
-        const response = await fetch(`${API_URL}/protected/profile`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+      const response = await fetch(`${API_URL}/protected/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-        const data = await response.json();
-        
-        // If profile not found, return default empty profile instead of throwing error
-        if (response.status === 404) {
-          return {
-            firstName: '',
-            lastName: '',
-            email: '',
-            dateOfBirth: '',
-            gender: '',
-            phoneNumber: '',
-            address: '',
-            problemDescription: '',
-            emergencyAppointment: 'no',
-            previousPatientId: '',
-            preferredCommunication: 'email',
-            preferredDoctor: 'drSmith',
-            insuranceProvider: '',
-            insurancePolicyNumber: '',
-            consentTelemedicine: false,
-          };
-        }
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch profile data");
-        }
-
-        return data;
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        throw new Error(error.message);
+      // Handle 404 by returning empty profile with ID field
+      if (response.status === 404) {
+        return {
+          id: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+          dateOfBirth: '',
+          gender: '',
+          phoneNumber: '',
+          address: '',
+          problemDescription: '',
+          emergencyAppointment: 'no',
+          previousPatientId: '',
+          preferredCommunication: 'email',
+          preferredDoctor: 'drSmith',
+          insuranceProvider: '',
+          insurancePolicyNumber: '',
+          consentTelemedicine: false,
+        };
       }
-    },
 
-    async updateProfile(values) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('User not authenticated');
-
-        const response = await fetch(`${API_URL}/protected/profile`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to update profile");
-        }
-
-        return data;
-      } catch (error) {
-        throw new Error(error.message);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch profile data");
       }
-    },
+
+      return data;
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      throw new Error(error.message);
+    }
+  },
+
+  async updateProfile(values) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('User not authenticated');
+
+      const response = await fetch(`${API_URL}/protected/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update profile");
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw new Error(error.message);
+    }
+  },
 
   async getProtectedData(token) {
     try {
@@ -204,104 +198,4 @@ export const authService = {
       throw new Error(error.message);
     }
   },
-
-  // // Fetch doctor profile
-  // async getDoctorProfile() {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) throw new Error('User not authenticated');
-
-  //     const response = await fetch(`${API_URL}/doctor-profile`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-
-  //     const data = await response.json();
-  //     if (!response.ok) {
-  //       throw new Error(data.error || "Failed to fetch profile");
-  //     }
-
-  //     return data;
-  //   } catch (error) {
-  //     throw new Error(error.message);
-  //   }
-  // },
-
-  // // Update doctor profile
-  // async updateDoctorProfile(profileData) {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) throw new Error('User not authenticated');
-
-  //     const response = await fetch(`${API_URL}/doctor-profile`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(profileData),
-  //     });
-
-  //     const data = await response.json();
-  //     if (!response.ok) {
-  //       throw new Error(data.error || "Failed to update profile");
-  //     }
-
-  //     return data;
-  //   } catch (error) {
-  //     throw new Error(error.message);
-  //   }
-  // },
-
-  // // Fetch scheduled appointments for a doctor
-  // async getDoctorAppointments() {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) throw new Error('User not authenticated');
-
-  //     const response = await fetch(`${API_URL}/doctor-appointments`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-
-  //     const data = await response.json();
-  //     if (!response.ok) {
-  //       throw new Error(data.error || "Failed to fetch appointments");
-  //     }
-
-  //     return data;
-  //   } catch (error) {
-  //     throw new Error(error.message);
-  //   }
-  // },
-
-  // // Cancel an appointment
-  // async cancelAppointment(appointmentId) {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) throw new Error('User not authenticated');
-
-  //     const response = await fetch(`${API_URL}/doctor-appointments/${appointmentId}`, {
-  //       method: 'DELETE',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to cancel appointment");
-  //     }
-
-  //     return { success: true };
-  //   } catch (error) {
-  //     throw new Error(error.message);
-  //   }
-  // },
 };
