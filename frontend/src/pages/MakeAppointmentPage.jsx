@@ -11,18 +11,25 @@ import {
   Container,
   Paper,
   TextField,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Tabs,
+  Tab,
   List,
   ListItem,
   ListItemText,
   Divider,
-  Chip
+  Chip,
+  Avatar,
+  Badge,
+  IconButton
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import HistoryIcon from '@mui/icons-material/History';
+import { 
+  Schedule as ScheduleIcon, 
+  History as HistoryIcon,
+  AttachFile as AttachFileIcon,
+  ExpandMore as ExpandMoreIcon,
+  MedicalServices as MedicalServicesIcon
+} from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
 
 // Mock data
 const mockSpecialties = [
@@ -67,7 +74,26 @@ const mockHistory = [
   },
 ];
 
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  '& .MuiTabs-indicator': {
+    backgroundColor: theme.palette.primary.main,
+    height: 3,
+  },
+  marginBottom: theme.spacing(4),
+}));
+
+const StyledTab = styled(Tab)(({ theme }) => ({
+  textTransform: 'none',
+  fontSize: '1rem',
+  fontWeight: 'bold',
+  color: theme.palette.text.primary,
+  '&.Mui-selected': {
+    color: theme.palette.primary.main,
+  },
+}));
+
 export default function AppointmentsPage() {
+  const [activeTab, setActiveTab] = useState(0);
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
@@ -77,7 +103,10 @@ export default function AppointmentsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Add missing handlers
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const handleSpecialtyChange = (event) => {
     setSelectedSpecialty(event.target.value);
     setSelectedDoctor('');
@@ -130,181 +159,231 @@ export default function AppointmentsPage() {
   const slotsForSelectedDoctor = selectedDoctor ? mockSlots[selectedDoctor] : [];
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      {/* Appointment Booking Section */}
-      <Paper elevation={4} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-          <AttachFileIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-          New Appointment
-        </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h3" sx={{ 
+        fontWeight: 'bold', 
+        mb: 4, 
+        color: 'primary.main',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2
+      }}>
+        <MedicalServicesIcon fontSize="large" />
+        Medical Appointments
+      </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-
-        {/* Specialty Selection */}
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Medical Specialty</InputLabel>
-          <Select
-            value={selectedSpecialty}
-            onChange={handleSpecialtyChange}
-            label="Medical Specialty"
-          >
-            <MenuItem value=""><em>Select Specialty</em></MenuItem>
-            {mockSpecialties.map((spec) => (
-              <MenuItem key={spec.id} value={spec.id}>{spec.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Doctor Selection */}
-        <FormControl fullWidth sx={{ mb: 2 }} disabled={!selectedSpecialty}>
-          <InputLabel>Select Doctor</InputLabel>
-          <Select
-            value={selectedDoctor}
-            onChange={handleDoctorChange}
-            label="Select Doctor"
-          >
-            <MenuItem value=""><em>Available Doctors</em></MenuItem>
-            {doctorsForSelectedSpecialty.map((doc) => (
-              <MenuItem key={doc.id} value={doc.id}>
-                <Box>
-                  <Typography>{doc.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {doc.qualifications} | {doc.experience} experience
-                  </Typography>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Time Slot Selection */}
-        <FormControl fullWidth sx={{ mb: 2 }} disabled={!selectedDoctor}>
-          <InputLabel>Available Time Slots</InputLabel>
-          <Select
-            value={selectedSlot}
-            onChange={(e) => setSelectedSlot(e.target.value)}
-            label="Available Time Slots"
-          >
-            <MenuItem value=""><em>Select Time Slot</em></MenuItem>
-            {slotsForSelectedDoctor.map((slot) => (
-              <MenuItem key={slot} value={slot}>
-                {new Date(slot).toLocaleString()}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Problem Description */}
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Describe Your Problem"
-          value={problemDescription}
-          onChange={(e) => setProblemDescription(e.target.value)}
-          sx={{ mb: 2 }}
+      <StyledTabs value={activeTab} onChange={handleTabChange}>
+        <StyledTab 
+          label="Schedule Appointment" 
+          icon={<ScheduleIcon />} 
+          iconPosition="start"
         />
+        <StyledTab 
+          label={
+            <Badge badgeContent={appointmentsHistory.length} color="primary">
+              Appointment History
+            </Badge>
+          } 
+          icon={<HistoryIcon />} 
+          iconPosition="start"
+        />
+      </StyledTabs>
 
-        {/* File Upload */}
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<AttachFileIcon />}
-          sx={{ mb: 2 }}
-        >
-          Upload Medical Reports
-          <input
-            type="file"
-            hidden
-            multiple
-            onChange={handleFileUpload}
-          />
-        </Button>
-        {medicalFiles.length > 0 && (
-          <Typography variant="caption" sx={{ ml: 2 }}>
-            {medicalFiles.length} file(s) selected
+      {activeTab === 0 && (
+        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ 
+            fontWeight: 'bold', 
+            mb: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <ScheduleIcon fontSize="large" />
+            New Appointment
           </Typography>
-        )}
 
-        <Button
-          variant="contained"
-          size="large"
-          fullWidth
-          onClick={handleBookAppointment}
-          sx={{ mt: 2, py: 1.5 }}
-        >
-          Confirm Appointment
-        </Button>
-      </Paper>
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
 
-      {/* Appointment History Section */}
-      <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-          <HistoryIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-          Appointment History
-        </Typography>
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Medical Specialty</InputLabel>
+            <Select
+              value={selectedSpecialty}
+              onChange={handleSpecialtyChange}
+              label="Medical Specialty"
+            >
+              <MenuItem value=""><em>Select Specialty</em></MenuItem>
+              {mockSpecialties.map((spec) => (
+                <MenuItem key={spec.id} value={spec.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ 
+                      bgcolor: 'primary.main', 
+                      width: 32, 
+                      height: 32,
+                      fontSize: '0.875rem'
+                    }}>
+                      {spec.name[0]}
+                    </Avatar>
+                    {spec.name}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-        {appointmentsHistory.length === 0 ? (
-          <Typography color="text.secondary">No previous appointments found</Typography>
-        ) : (
-          <List>
-            {appointmentsHistory.map((appointment) => (
-              <Accordion key={appointment.id} sx={{ mb: 1 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography>
-                      {new Date(appointment.date).toLocaleDateString()} - {appointment.doctor}
-                    </Typography>
+          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedSpecialty}>
+            <InputLabel>Select Doctor</InputLabel>
+            <Select
+              value={selectedDoctor}
+              onChange={handleDoctorChange}
+              label="Select Doctor"
+            >
+              <MenuItem value=""><em>Available Doctors</em></MenuItem>
+              {doctorsForSelectedSpecialty.map((doc) => (
+                <MenuItem key={doc.id} value={doc.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'secondary.main' }}>{doc.name[0]}</Avatar>
+                    <Box>
+                      <Typography>{doc.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {doc.qualifications} • {doc.experience} experience
+                      </Typography>
+                    </Box>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedDoctor}>
+            <InputLabel>Available Time Slots</InputLabel>
+            <Select
+              value={selectedSlot}
+              onChange={(e) => setSelectedSlot(e.target.value)}
+              label="Available Time Slots"
+            >
+              <MenuItem value=""><em>Select Time Slot</em></MenuItem>
+              {slotsForSelectedDoctor.map((slot) => (
+                <MenuItem key={slot} value={slot}>
+                  {new Date(slot).toLocaleString()}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label="Describe Your Problem"
+            value={problemDescription}
+            onChange={(e) => setProblemDescription(e.target.value)}
+            sx={{ mb: 3 }}
+          />
+
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<AttachFileIcon />}
+            sx={{ mb: 3 }}
+          >
+            Upload Medical Reports
+            <input
+              type="file"
+              hidden
+              multiple
+              onChange={handleFileUpload}
+            />
+          </Button>
+
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            onClick={handleBookAppointment}
+            sx={{ py: 1.5, fontWeight: 'bold' }}
+          >
+            Confirm Appointment
+          </Button>
+        </Paper>
+      )}
+
+      {activeTab === 1 && (
+        <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
+          <Typography variant="h4" gutterBottom sx={{ 
+            fontWeight: 'bold', 
+            mb: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <HistoryIcon fontSize="large" />
+            Appointment History
+          </Typography>
+
+          {appointmentsHistory.length === 0 ? (
+            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+              No appointment history found
+            </Typography>
+          ) : (
+            <List sx={{ width: '100%' }}>
+              {appointmentsHistory.map((appointment) => (
+                <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                  <ListItem>
+                    <ListItemText
+                      primary={
+                        <Typography variant="h6">
+                          {new Date(appointment.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </Typography>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                            {appointment.doctor}
+                          </Typography>
+                          <Typography variant="body2">
+                            {appointment.specialty}
+                          </Typography>
+                        </Box>
+                      }
+                    />
                     <Chip 
                       label={appointment.status} 
                       color={appointment.status === 'Completed' ? 'success' : 'warning'}
-                      size="small"
+                      sx={{ fontWeight: 'bold' }}
                     />
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <List>
-                    <ListItem>
-                      <ListItemText
-                        primary="Specialty"
-                        secondary={appointment.specialty}
-                      />
-                    </ListItem>
-                    <Divider />
-                    <ListItem>
-                      <ListItemText
-                        primary="Problem Description"
-                        secondary={appointment.problem || 'Not specified'}
-                      />
-                    </ListItem>
-                    <Divider />
+                    <IconButton>
+                      <ExpandMoreIcon />
+                    </IconButton>
+                  </ListItem>
+                  
+                  <Divider />
+                  
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      <strong>Problem:</strong> {appointment.problem || 'Not specified'}
+                    </Typography>
                     {appointment.prescription && (
-                      <>
-                        <ListItem>
-                          <ListItemText
-                            primary="Prescription"
-                            secondary={appointment.prescription}
-                          />
-                        </ListItem>
-                        <Divider />
-                      </>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Prescription:</strong> {appointment.prescription}
+                      </Typography>
                     )}
-                    {appointment.files && appointment.files.length > 0 && (
-                      <ListItem>
-                        <ListItemText
-                          primary="Attached Files"
-                          secondary={`${appointment.files.length} medical reports`}
-                        />
-                      </ListItem>
+                    {appointment.files?.length > 0 && (
+                      <Typography variant="body2">
+                        <strong>Attachments:</strong> {appointment.files.length} file(s)
+                      </Typography>
                     )}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </List>
-        )}
-      </Paper>
+                  </Box>
+                </Paper>
+              ))}
+            </List>
+          )}
+        </Paper>
+      )}
     </Container>
   );
 }
