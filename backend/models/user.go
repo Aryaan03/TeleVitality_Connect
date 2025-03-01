@@ -25,3 +25,13 @@ type Profile struct {
 	InsurancePolicyNumber  string `json:"insurancePolicyNumber"`
 	ConsentTelemedicine    bool   `json:"consentTelemedicine"`
 }
+
+type Appointment struct {
+	ID       int      `json:"id"`
+	UserID   int      `json:"userId"`
+	DoctorID string   `json:"doctorId"`
+	Slot     string   `json:"slot"`
+	Problem  string   `json:"problem"`
+	Status   string   `json:"status"`
+	Files    []string `json:"files"`
+}

@@ -198,4 +198,54 @@ export const authService = {
       throw new Error(error.message);
     }
   },
+  async getDoctorProfile() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('User not authenticated');
+
+      const response = await fetch(`${API_URL}/doctor/profile`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch profile data');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      throw new Error(error.message);
+    }
+  },
+
+  async updateDoctorProfile(values) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('User not authenticated');
+
+      const response = await fetch(`${API_URL}/doctor/profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw new Error(error.message);
+    }
+  },
 };

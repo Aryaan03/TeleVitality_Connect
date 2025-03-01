@@ -70,7 +70,11 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// In handlers/profile.go, UpdateProfile function:
 func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	// Log the received request
+	fmt.Println("UpdateProfile called")
+
 	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -80,39 +84,45 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
+		fmt.Println("JWT Parse error:", err)
 		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
 		return
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userID := claims["user_id"].(float64)
+		fmt.Println("User ID from token:", userID)
 
 		var profile models.Profile
 		if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
+			fmt.Println("JSON decode error:", err)
 			http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
 			return
 		}
 
-		_, err := h.DB.Exec(`
-			INSERT INTO profiles (user_id, first_name, last_name, date_of_birth, gender, phone_number, 
-			address, problem_description, emergency_appointment, 
-			preferred_communication, preferred_doctor, insurance_provider, insurance_policy_number, 
-			consent_telemedicine)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-			ON CONFLICT (user_id) DO UPDATE SET
-				first_name = EXCLUDED.first_name,
-				last_name = EXCLUDED.last_name,
-				date_of_birth = EXCLUDED.date_of_birth,
-				gender = EXCLUDED.gender,
-				phone_number = EXCLUDED.phone_number,
-				address = EXCLUDED.address,
-				problem_description = EXCLUDED.problem_description,
-				emergency_appointment = EXCLUDED.emergency_appointment,
-				preferred_communication = EXCLUDED.preferred_communication,
-				preferred_doctor = EXCLUDED.preferred_doctor,
-				insurance_provider = EXCLUDED.insurance_provider,
-				insurance_policy_number = EXCLUDED.insurance_policy_number,
-				consent_telemedicine = EXCLUDED.consent_telemedicine`,
+		// Log the profile data being saved
+		fmt.Printf("Profile to save: %+v\n", profile)
+
+		result, err := h.DB.Exec(`
+            INSERT INTO profiles (user_id, first_name, last_name, date_of_birth, gender, phone_number, 
+            address, problem_description, emergency_appointment, 
+            preferred_communication, preferred_doctor, insurance_provider, insurance_policy_number, 
+            consent_telemedicine)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            ON CONFLICT (user_id) DO UPDATE SET
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                date_of_birth = EXCLUDED.date_of_birth,
+                gender = EXCLUDED.gender,
+                phone_number = EXCLUDED.phone_number,
+                address = EXCLUDED.address,
+                problem_description = EXCLUDED.problem_description,
+                emergency_appointment = EXCLUDED.emergency_appointment,
+                preferred_communication = EXCLUDED.preferred_communication,
+                preferred_doctor = EXCLUDED.preferred_doctor,
+                insurance_provider = EXCLUDED.insurance_provider,
+                insurance_policy_number = EXCLUDED.insurance_policy_number,
+                consent_telemedicine = EXCLUDED.consent_telemedicine`,
 			userID, profile.FirstName, profile.LastName, profile.DateOfBirth, profile.Gender,
 			profile.PhoneNumber, profile.Address, profile.ProblemDescription, profile.EmergencyAppointment,
 			profile.PreferredCommunication, profile.PreferredDoctor,
@@ -120,13 +130,18 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
+			fmt.Println("Database error:", err)
 			http.Error(w, `{"error": "Failed to update profile"}`, http.StatusInternalServerError)
 			return
 		}
 
+		rowsAffected, _ := result.RowsAffected()
+		fmt.Println("Rows affected:", rowsAffected)
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated successfully"})
 	} else {
+		fmt.Println("Invalid token claims")
 		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
 	}
 }

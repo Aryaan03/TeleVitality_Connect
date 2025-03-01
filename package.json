@@ -1,5 +1,13 @@
 {
   "dependencies": {
-    "axios": "^1.7.9"
-  }
+    "@fullcalendar/core": "^6.1.15",
+    "@fullcalendar/daygrid": "^6.1.15",
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/react": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
+    "@mui/x-date-pickers": "^7.27.1",
+    "axios": "^1.7.9",
+    "dayjs": "^1.11.13"
+  },
+  "proxy": "http://localhost:8080"
 }

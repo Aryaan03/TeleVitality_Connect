@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -15,7 +16,8 @@ func main() {
 	defer db.Close()
 
 	authHandler := &handlers.AuthHandler{DB: db}
-	profileHandler := &handlers.ProfileHandler{DB: db} // Initialize ProfileHandler
+	profileHandler := &handlers.ProfileHandler{DB: db}
+	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db} // Initialize DoctorProfileHandler
 
 	r := mux.NewRouter()
 
@@ -27,18 +29,17 @@ func main() {
 	r.HandleFunc("/api/docregister", authHandler.DoctorRegister).Methods("POST")
 	r.HandleFunc("/api/doclogin", authHandler.DoctorLogin).Methods("POST")
 
-	// Protected Patient Routes (Require JWT Authentication)
+	// Protected Patient Routes
 	protected := r.PathPrefix("/api/protected").Subrouter()
 	protected.Handle("/dashboard", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(authHandler.ProtectedDashboard))).Methods("GET")
 	protected.Handle("/profile", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(profileHandler.GetProfile))).Methods("GET")
 	protected.Handle("/profile", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(profileHandler.UpdateProfile))).Methods("PUT")
 
-	// Protected Doctor Routes (Require JWT Authentication) (TO BE IMPLEMENTED)
-	// doctorRoutes := r.PathPrefix("/api/doctor").Subrouter()
-	// doctorRoutes.Use(handlers.JWTAuthMiddleware("doctor")) // Apply Doctor Role Middleware
-	// doctorRoutes.HandleFunc("/dashboard", authHandler.ProtectedDashboard).Methods("GET")
-	// doctorRoutes.HandleFunc("/profile", profileHandler.GetProfile).Methods("GET")
-	// doctorRoutes.HandleFunc("/profile", profileHandler.UpdateProfile).Methods("PUT")
+	// Protected Doctor Routes
+	protectedDoctor := r.PathPrefix("/api/doctor").Subrouter()
+	protectedDoctor.Use(handlers.JWTAuthMiddleware("doctor")) // Apply Doctor Role Middleware
+	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.GetDoctorProfile)).Methods("GET")
+	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.UpdateDoctorProfile)).Methods("PUT")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

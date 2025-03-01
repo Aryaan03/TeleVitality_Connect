@@ -9,58 +9,83 @@ import {
   Alert,
   FormControlLabel,
   Checkbox,
+  Grid,
+  Divider,
+  CircularProgress,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid';
 import DoctorAvailabilityCalendar from '../components/DoctorAvailabilityCalendar';
+import TimeSlotPicker from '../components/TimeSlotPicker';
+import { authService } from '../services/api'; // Import your API service
 
 export default function DoctorProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [initialValues, setInitialValues] = useState(null);
-  // State to track doctor's availability
+  const [loading, setLoading] = useState(true);
+
+  // Enhanced availability state
   const [availability, setAvailability] = useState({
-    Monday: false,
-    Tuesday: false,
-    Wednesday: false,
-    Thursday: false,
-    Friday: false,
-    Saturday: false,
-    Sunday: false,
+    Monday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Tuesday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Wednesday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Thursday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Friday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Saturday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
+    Sunday: {
+      enabled: false,
+      timeSlots: [{ startTime: '09:00', endTime: '17:00', enabled: true }],
+    },
   });
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Dummy data for testing
-        const profileData = {
-          firstName: 'John',
-          lastName: 'Doe',
-          dateOfBirth: '1985-07-15',
-          gender: 'Male',
-          phoneNumber: '123-456-7890',
-          medicalLicenseNumber: 'LIC123456',
-          issuingMedicalBoard: 'Medical Board of XYZ',
-          licenseExpiryDate: '2030-12-31',
-          specialization: 'Cardiology',
-          yearsOfExperience: 15,
-          hospitalName: 'City Hospital',
-          workAddress: '123 Medical Street, New York, NY',
-          consultationType: 'In-person',
-        };
-
+        const profileData = await authService.getDoctorProfile(); // Fetch profile data from backend
         setInitialValues(profileData);
+
+        // Parse availability from backend (if available)
+        if (profileData.availability) {
+          setAvailability(JSON.parse(profileData.availability));
+        }
+
         setError('');
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Unable to load profile. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
 
-  if (initialValues === null) return <Typography>Loading...</Typography>;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
+    );
+  }
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required('Required'),
@@ -81,15 +106,30 @@ export default function DoctorProfilePage() {
   });
 
   const handleSubmit = async (values) => {
-    console.log('Submitted values:', values);
-    setSuccess('Profile updated successfully!');
-    setError('');
+    try {
+      // Combine form values with availability data
+      const formData = {
+        ...values,
+        availability: JSON.stringify(availability), // Convert availability to JSON string
+      };
+
+      // Send data to backend
+      await authService.updateDoctorProfile(formData);
+
+      setSuccess('Profile updated successfully!');
+      setError('');
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile. Please try again.');
+      setSuccess('');
+    }
   };
 
-  const handleDayChange = (day) => {
+  // Handler for updating availability
+  const handleAvailabilityUpdate = (day, dayAvailability) => {
     setAvailability((prev) => ({
       ...prev,
-      [day]: !prev[day],
+      [day]: dayAvailability,
     }));
   };
 
@@ -108,7 +148,7 @@ export default function DoctorProfilePage() {
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ errors, touched }) => (
+        {({ errors, touched, isSubmitting }) => (
           <Form>
             <Grid container spacing={3}>
               {/* Basic Information */}
@@ -220,7 +260,7 @@ export default function DoctorProfilePage() {
                   as={TextField}
                   name="specialization"
                   label="Specialization"
-                  select // This makes it a dropdown menu
+                  select
                   fullWidth
                   margin="normal"
                   error={touched.specialization && !!errors.specialization}
@@ -259,6 +299,22 @@ export default function DoctorProfilePage() {
                   helperText={touched.hospitalName && errors.hospitalName}
                 />
               </Grid>
+              <Grid item xs={12} md={6}>
+                <Field
+                  as={TextField}
+                  name="consultationType"
+                  label="Consultation Type"
+                  select
+                  fullWidth
+                  margin="normal"
+                  error={touched.consultationType && !!errors.consultationType}
+                  helperText={touched.consultationType && errors.consultationType}
+                >
+                  <MenuItem value="In-person">In-person</MenuItem>
+                  <MenuItem value="Virtual">Virtual</MenuItem>
+                  <MenuItem value="Both">Both</MenuItem>
+                </Field>
+              </Grid>
               <Grid item xs={12}>
                 <Field
                   as={TextField}
@@ -272,35 +328,42 @@ export default function DoctorProfilePage() {
                 />
               </Grid>
             </Grid>
+
             {/* Availability Section */}
             <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
               Set Your Availability
             </Typography>
-            <Grid container spacing={2}>
+            <Divider sx={{ mb: 3 }} />
+
+            <Box sx={{ mb: 4 }}>
               {Object.keys(availability).map((day) => (
-                <Grid item xs={6} sm={4} key={day}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={availability[day]}
-                        onChange={() => handleDayChange(day)}
-                      />
-                    }
-                    label={day}
-                  />
-                </Grid>
+                <TimeSlotPicker
+                  key={day}
+                  day={day}
+                  dayAvailability={availability[day]}
+                  onUpdate={handleAvailabilityUpdate}
+                />
               ))}
-            </Grid>
+            </Box>
 
             {/* Calendar Display */}
             <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
               Your Availability Calendar
             </Typography>
-            <DoctorAvailabilityCalendar availability={availability} />
+            <Divider sx={{ mb: 3 }} />
+            <Box sx={{ mb: 4 }}>
+              <DoctorAvailabilityCalendar availability={availability} />
+            </Box>
 
-
-            <Button type="submit" variant="contained" size="large" sx={{ mt: 3 }}>
-              Save Profile
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{ mt: 3 }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <CircularProgress size={24} /> : 'Save Profile'}
             </Button>
           </Form>
         )}
