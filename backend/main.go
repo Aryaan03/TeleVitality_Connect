@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -17,7 +16,8 @@ func main() {
 
 	authHandler := &handlers.AuthHandler{DB: db}
 	profileHandler := &handlers.ProfileHandler{DB: db}
-	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db} // Initialize DoctorProfileHandler
+	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db}
+	appointmentHandler := &handlers.AppointmentHandler{DB: db} // Initialize AppointmentHandler
 
 	r := mux.NewRouter()
 
@@ -40,6 +40,17 @@ func main() {
 	protectedDoctor.Use(handlers.JWTAuthMiddleware("doctor")) // Apply Doctor Role Middleware
 	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.GetDoctorProfile)).Methods("GET")
 	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.UpdateDoctorProfile)).Methods("PUT")
+
+	// Appointment Routes
+	r.HandleFunc("/api/specialties", appointmentHandler.GetSpecialties).Methods("GET")
+	r.HandleFunc("/api/doctors", appointmentHandler.GetDoctorsBySpecialty).Methods("GET")
+	r.HandleFunc("/api/doctor/availability", appointmentHandler.GetDoctorAvailability).Methods("GET")
+
+	// Use r.Handle for routes with middleware
+	r.Handle("/api/appointments", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.BookAppointment))).Methods("POST")
+
+	// Add the /api/appointments/history route
+	r.Handle("/api/appointments/history", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.GetAppointmentHistory))).Methods("GET")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

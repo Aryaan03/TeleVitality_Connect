@@ -1,128 +1,262 @@
 package handlers
 
 import (
+	"backend/models"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AppointmentHandler struct {
 	DB *sql.DB
 }
 
-// // Mock data for specialties
-// var mockSpecialties = []models.Specialty{
-// 	{ID: "cardiology", Name: "Cardiology"},
-// 	{ID: "dermatology", Name: "Dermatology"},
-// 	{ID: "pediatrics", Name: "Pediatrics"},
-// }
+func (h *AppointmentHandler) GetSpecialties(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.DB.Query("SELECT id, name FROM specialties")
+	if err != nil {
+		http.Error(w, `{"error": "Failed to fetch specialties"}`, http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-// // Mock data for doctors
-// var mockDoctors = map[string][]models.Doctor{
-// 	"cardiology": {
-// 		{ID: "doc1", Name: "Dr. Heart", Experience: "10 years", Qualifications: "MD, Cardiology", SpecialtyID: "cardiology"},
-// 		{ID: "doc2", Name: "Dr. Aorta", Experience: "8 years", Qualifications: "MD, FACC", SpecialtyID: "cardiology"},
-// 	},
-// 	"dermatology": {
-// 		{ID: "doc3", Name: "Dr. Skin", Experience: "12 years", Qualifications: "MD, Dermatology", SpecialtyID: "dermatology"},
-// 		{ID: "doc4", Name: "Dr. Derm", Experience: "6 years", Qualifications: "MD, Cosmetic Dermatology", SpecialtyID: "dermatology"},
-// 	},
-// 	"pediatrics": {
-// 		{ID: "doc5", Name: "Dr. Kid", Experience: "15 years", Qualifications: "MD, Pediatrics", SpecialtyID: "pediatrics"},
-// 		{ID: "doc6", Name: "Dr. Child", Experience: "7 years", Qualifications: "MD, Child Nutrition", SpecialtyID: "pediatrics"},
-// 	},
-// }
+	var specialties []models.Specialty
+	for rows.Next() {
+		var spec models.Specialty
+		if err := rows.Scan(&spec.ID, &spec.Name); err != nil {
+			http.Error(w, `{"error": "Failed to scan specialties"}`, http.StatusInternalServerError)
+			return
+		}
+		specialties = append(specialties, spec)
+	}
 
-// // Mock data for slots
-// var mockSlots = map[string][]string{
-// 	"doc1": {"2025-03-01T10:00", "2025-03-01T11:00"},
-// 	"doc2": {"2025-03-02T09:30", "2025-03-02T13:00"},
-// 	"doc3": {"2025-03-03T08:00", "2025-03-03T10:30"},
-// 	"doc4": {"2025-03-04T14:00", "2025-03-04T15:30"},
-// 	"doc5": {"2025-03-05T09:00", "2025-03-05T11:00"},
-// 	"doc6": {"2025-03-06T10:00", "2025-03-06T12:00"},
-// }
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(specialties)
+}
 
-// // Mock data for appointment history
-// var mockAppointments = []models.Appointment{
-// 	{
-// 		ID:       1,
-// 		UserID:   1,
-// 		DoctorID: "doc1",
-// 		Slot:     "2024-03-15T10:00",
-// 		Problem:  "Chest pain consultation",
-// 		Status:   "Completed",
-// 	},
-// }
+func (h *AppointmentHandler) GetDoctorsBySpecialty(w http.ResponseWriter, r *http.Request) {
+	specialtyID := strings.TrimSpace(r.URL.Query().Get("specialty"))
+	if specialtyID == "" {
+		http.Error(w, `{"error": "Specialty ID is required"}`, http.StatusBadRequest)
+		return
+	}
 
-// // GetSpecialties returns the list of medical specialties
-// func (h *AppointmentHandler) GetSpecialties(w http.ResponseWriter, r *http.Request) {
-// 	json.NewEncoder(w).Encode(mockSpecialties)
-// }
+	// Query doctors by specialty ID instead of name
+	rows, err := h.DB.Query(`
+        SELECT user_id, first_name, last_name, specialization, years_of_experience
+        FROM doctor_profiles
+        WHERE specialization = (SELECT name FROM specialties WHERE id = $1)`, specialtyID)
 
-// // GetDoctorsBySpecialty returns the list of doctors for a given specialty
-// func (h *AppointmentHandler) GetDoctorsBySpecialty(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	specialtyID := vars["specialtyId"]
-// 	doctors := mockDoctors[specialtyID]
-// 	json.NewEncoder(w).Encode(doctors)
-// }
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "Failed to fetch doctors: %s"}`, err.Error()), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-// // GetSlotsByDoctor returns the available time slots for a given doctor
-// func (h *AppointmentHandler) GetSlotsByDoctor(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	doctorID := vars["doctorId"]
-// 	slots := mockSlots[doctorID]
-// 	json.NewEncoder(w).Encode(slots)
-// }
+	var doctors []models.DoctorProfile
+	for rows.Next() {
+		var doc models.DoctorProfile
+		if err := rows.Scan(&doc.UserID, &doc.FirstName, &doc.LastName, &doc.Specialization, &doc.YearsOfExperience); err != nil {
+			http.Error(w, `{"error": "Failed to scan doctors"}`, http.StatusInternalServerError)
+			return
+		}
+		doctors = append(doctors, doc)
+	}
 
-// // BookAppointment handles the booking of an appointment
-// func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Request) {
-// 	var appointment models.Appointment
-// 	if err := json.NewDecoder(r.Body).Decode(&appointment); err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	fmt.Println("Doctors found:", len(doctors)) // Log the number of doctors found
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(doctors)
+}
 
-// 	// Insert the appointment into the database
-// 	query := `
-//         INSERT INTO appointments (user_id, doctor_id, slot, problem, status, files)
-//         VALUES ($1, $2, $3, $4, $5, $6)
-//         RETURNING id
-//     `
-// 	var appointmentID int
-// 	err := h.DB.QueryRow(
-// 		query,
-// 		appointment.UserID,
-// 		appointment.DoctorID,
-// 		appointment.Slot,
-// 		appointment.Problem,
-// 		appointment.Status,
-// 		pq.Array(appointment.Files),
-// 	).Scan(&appointmentID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+func (h *AppointmentHandler) GetDoctorAvailability(w http.ResponseWriter, r *http.Request) {
+	doctorID := r.URL.Query().Get("doctor")
+	if doctorID == "" {
+		http.Error(w, `{"error": "Doctor ID is required"}`, http.StatusBadRequest)
+		return
+	}
 
-// 	// Return the created appointment with its ID
-// 	appointment.ID = appointmentID
-// 	json.NewEncoder(w).Encode(appointment)
-// }
+	var availabilityJSON string
+	err := h.DB.QueryRow("SELECT availability FROM doctor_profiles WHERE user_id = $1", doctorID).Scan(&availabilityJSON)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to fetch availability"}`, http.StatusInternalServerError)
+		return
+	}
 
-// // GetAppointmentHistory returns the appointment history for a user
-// func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *http.Request) {
-// 	userID := r.URL.Query().Get("userId")
-// 	if userID == "" {
-// 		http.Error(w, "userId is required", http.StatusBadRequest)
-// 		return
-// 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(availabilityJSON))
+}
 
-// 	// Mock logic: Filter appointments by userID
-// 	var userAppointments []models.Appointment
-// 	for _, appointment := range mockAppointments {
-// 		if appointment.UserID == 1 { // Replace with actual userID parsing
-// 			userAppointments = append(userAppointments, appointment)
-// 		}
-// 	}
+func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Request) {
+	// JWT validation and token parsing
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		log.Println("Error parsing token:", err)
+		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
 
-// 	json.NewEncoder(w).Encode(userAppointments)
-// }
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		patientID := claims["user_id"].(float64)
+		log.Println("Patient ID:", patientID)
+
+		// First decode as a raw map to inspect the data
+		var requestData map[string]interface{}
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Println("Error reading request body:", err)
+			http.Error(w, `{"error": "Failed to read request body"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Log the raw request for debugging
+		log.Println("Raw request body:", string(bodyBytes))
+
+		if err := json.Unmarshal(bodyBytes, &requestData); err != nil {
+			log.Println("Error unmarshaling raw request:", err)
+			http.Error(w, `{"error": "Invalid JSON in request body"}`, http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("Parsed request data: %+v\n", requestData)
+
+		// Extract fields we need
+		doctorID, ok := requestData["doctorId"].(float64)
+		if !ok {
+			log.Println("Invalid or missing doctorId")
+			http.Error(w, `{"error": "Invalid or missing doctorId"}`, http.StatusBadRequest)
+			return
+		}
+
+		problemDesc, _ := requestData["problem"].(string)
+
+		// Extract appointment time from the request
+		appointmentTimeData, ok := requestData["appointmentTime"].(map[string]interface{})
+		if !ok {
+			log.Println("Invalid or missing appointmentTime")
+			http.Error(w, `{"error": "Invalid appointment time format"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Convert the appointment time to JSON
+		appointmentTimeJSON, err := json.Marshal(appointmentTimeData)
+		if err != nil {
+			log.Println("Error marshaling appointment time:", err)
+			http.Error(w, `{"error": "Invalid appointment time format"}`, http.StatusBadRequest)
+			return
+		}
+
+		log.Println("Appointment Time JSON:", string(appointmentTimeJSON))
+
+		// Insert into the database
+		_, err = h.DB.Exec(`
+            INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
+            VALUES ($1, $2, $3, $4)`,
+			int(patientID), int(doctorID), appointmentTimeJSON, problemDesc)
+
+		if err != nil {
+			log.Println("Error executing SQL query:", err)
+			http.Error(w, `{"error": "Failed to book appointment"}`, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Appointment booked successfully"})
+	} else {
+		log.Println("Invalid token claims")
+		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+	}
+}
+
+func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *http.Request) {
+	// JWT validation and token parsing
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		log.Println("Error parsing token:", err)
+		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		patientID := claims["user_id"].(float64)
+
+		// Query the database for the patient's appointment history
+		rows, err := h.DB.Query(`
+            SELECT 
+                a.id, 
+                a.patient_id, 
+                a.doctor_id, 
+                a.appointment_time, 
+                a.problem_description, 
+                a.status, 
+                d.first_name, 
+                d.last_name
+            FROM appointments a
+            JOIN doctor_profiles d ON a.doctor_id = d.user_id
+            WHERE a.patient_id = $1
+            ORDER BY a.created_at DESC`, int(patientID))
+		if err != nil {
+			log.Println("Error querying appointment history:", err)
+			http.Error(w, `{"error": "Failed to fetch appointment history"}`, http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var appointments []models.Appointment
+		for rows.Next() {
+			var app models.Appointment
+			var doctorFirstName, doctorLastName string
+			var appointmentTimeJSON []byte
+
+			if err := rows.Scan(
+				&app.ID,
+				&app.PatientID,
+				&app.DoctorID,
+				&appointmentTimeJSON,
+				&app.ProblemDescription,
+				&app.Status,
+				&doctorFirstName,
+				&doctorLastName,
+			); err != nil {
+				log.Println("Error scanning appointment history:", err)
+				http.Error(w, `{"error": "Failed to scan appointment history"}`, http.StatusInternalServerError)
+				return
+			}
+
+			// Unmarshal the appointment time JSON
+			if err := json.Unmarshal(appointmentTimeJSON, &app.AppointmentTime); err != nil {
+				log.Println("Error unmarshaling appointment time:", err)
+				http.Error(w, `{"error": "Failed to parse appointment time"}`, http.StatusInternalServerError)
+				return
+			}
+
+			// Construct the doctor's name
+			app.DoctorName = fmt.Sprintf("%s %s", doctorFirstName, doctorLastName)
+
+			appointments = append(appointments, app)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(appointments)
+	} else {
+		log.Println("Invalid token claims")
+		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+	}
+}

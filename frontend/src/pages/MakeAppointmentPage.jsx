@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -20,7 +20,8 @@ import {
   Chip,
   Avatar,
   Badge,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import { 
   Schedule as ScheduleIcon, 
@@ -30,49 +31,7 @@ import {
   MedicalServices as MedicalServicesIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-
-// Mock data
-const mockSpecialties = [
-  { id: 'cardiology', name: 'Cardiology' },
-  { id: 'dermatology', name: 'Dermatology' },
-  { id: 'pediatrics', name: 'Pediatrics' },
-];
-
-const mockDoctors = {
-  cardiology: [
-    { id: 'doc1', name: 'Dr. Heart', experience: '10 years', qualifications: 'MD, Cardiology' },
-    { id: 'doc2', name: 'Dr. Aorta', experience: '8 years', qualifications: 'MD, FACC' },
-  ],
-  dermatology: [
-    { id: 'doc3', name: 'Dr. Skin', experience: '12 years', qualifications: 'MD, Dermatology' },
-    { id: 'doc4', name: 'Dr. Derm', experience: '6 years', qualifications: 'MD, Cosmetic Dermatology' },
-  ],
-  pediatrics: [
-    { id: 'doc5', name: 'Dr. Kid', experience: '15 years', qualifications: 'MD, Pediatrics' },
-    { id: 'doc6', name: 'Dr. Child', experience: '7 years', qualifications: 'MD, Child Nutrition' },
-  ],
-};
-
-const mockSlots = {
-  doc1: ['2025-03-01T10:00', '2025-03-01T11:00'],
-  doc2: ['2025-03-02T09:30', '2025-03-02T13:00'],
-  doc3: ['2025-03-03T08:00', '2025-03-03T10:30'],
-  doc4: ['2025-03-04T14:00', '2025-03-04T15:30'],
-  doc5: ['2025-03-05T09:00', '2025-03-05T11:00'],
-  doc6: ['2025-03-06T10:00', '2025-03-06T12:00'],
-};
-
-const mockHistory = [
-  {
-    id: 1,
-    date: '2024-03-15T10:00',
-    doctor: 'Dr. Heart',
-    specialty: 'Cardiology',
-    problem: 'Chest pain consultation',
-    prescription: 'Prescribed ECG and blood tests',
-    status: 'Completed'
-  },
-];
+import { appointmentService } from '../services/appointmentService';
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   '& .MuiTabs-indicator': {
@@ -99,23 +58,188 @@ export default function AppointmentsPage() {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [problemDescription, setProblemDescription] = useState('');
   const [medicalFiles, setMedicalFiles] = useState([]);
-  const [appointmentsHistory, setAppointmentsHistory] = useState(mockHistory);
+  const [appointmentsHistory, setAppointmentsHistory] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // State for data from API
+  const [specialties, setSpecialties] = useState([]);
+  const [doctors, setDoctors] = useState([]); // Initialize as an empty array
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loading, setLoading] = useState({
+    specialties: false,
+    doctors: false,
+    slots: false,
+    booking: false
+  });
+
+  // Fetch specialties on component mount
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        setLoading(prev => ({ ...prev, specialties: true }));
+        const data = await appointmentService.getSpecialties();
+        setSpecialties(data);
+      } catch (err) {
+        setError('Failed to load specialties. Please try again later.');
+        console.error(err);
+      } finally {
+        setLoading(prev => ({ ...prev, specialties: false }));
+      }
+    };
+
+    fetchSpecialties();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 1) {
+      const fetchAppointmentHistory = async () => {
+        try {
+          const data = await appointmentService.getAppointmentHistory();
+          setAppointmentsHistory(data);
+        } catch (err) {
+          setError('Failed to load appointment history. Please try again later.');
+          console.error(err);
+        }
+      };
+  
+      fetchAppointmentHistory();
+    }
+  }, [activeTab]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
-  const handleSpecialtyChange = (event) => {
-    setSelectedSpecialty(event.target.value);
+  const handleSpecialtyChange = async (event) => {
+    const specialtyId = event.target.value;
+    console.log("Selected Specialty ID:", specialtyId); // Log the selected specialty
+    setSelectedSpecialty(specialtyId);
     setSelectedDoctor('');
     setSelectedSlot('');
+    setAvailableSlots([]);
+  
+    if (specialtyId) {
+      try {
+        setLoading(prev => ({ ...prev, doctors: true }));
+        const doctorsData = await appointmentService.getDoctorsBySpecialty(specialtyId);
+        console.log('Doctors Data:', doctorsData); // Log the response
+        setDoctors(doctorsData || []);
+      } catch (err) {
+        setError('Failed to load doctors. Please try again later.');
+        console.error(err);
+        setDoctors([]);
+      } finally {
+        setLoading(prev => ({ ...prev, doctors: false }));
+      }
+    } else {
+      setDoctors([]);
+    }
   };
 
-  const handleDoctorChange = (event) => {
-    setSelectedDoctor(event.target.value);
+  const handleDoctorChange = async (event) => {
+    const doctorId = event.target.value;
+    setSelectedDoctor(doctorId);
     setSelectedSlot('');
+    
+    if (doctorId) {
+      try {
+        setLoading(prev => ({ ...prev, slots: true }));
+        const availabilityData = await appointmentService.getDoctorAvailability(doctorId);
+        
+        // Process availability data into 30-minute slots
+        const slots = processAvailabilityIntoTimeSlots(availabilityData);
+        setAvailableSlots(slots);
+      } catch (err) {
+        setError('Failed to load available time slots. Please try again later.');
+        console.error(err);
+      } finally {
+        setLoading(prev => ({ ...prev, slots: false }));
+      }
+    }
+  };
+
+  // Function to process doctor availability JSON into 30-minute time slots
+  const processAvailabilityIntoTimeSlots = (availabilityData) => {
+    const slots = [];
+    const currentDate = new Date();
+    const nextTwoWeeks = new Date(currentDate);
+    nextTwoWeeks.setDate(nextTwoWeeks.getDate() + 14);
+  
+    // Parse the availability JSON
+    let availability;
+    try {
+      availability = typeof availabilityData === 'string' 
+        ? JSON.parse(availabilityData) 
+        : availabilityData;
+    } catch (e) {
+      console.error("Error parsing availability data:", e);
+      return [];
+    }
+  
+    // Get day names (Monday, Tuesday, etc.)
+    const days = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", 
+      "Thursday", "Friday", "Saturday"
+    ];
+  
+    // Loop through the next 14 days
+    for (let d = 0; d < 14; d++) {
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() + d);
+      const dayName = days[date.getDay()];
+  
+      // Skip if this day isn't enabled in doctor's availability
+      if (!availability[dayName] || !availability[dayName].enabled) {
+        continue;
+      }
+  
+      // Process each enabled time slot for the day
+      availability[dayName].timeSlots.forEach(slot => {
+        if (!slot.enabled) return;
+  
+        // Convert slot times to minutes since midnight
+        const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+        const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+  
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+  
+        // Create 30-minute intervals
+        for (let time = startMinutes; time < endMinutes; time += 30) {
+          const hour = Math.floor(time / 60);
+          const minute = time % 60;
+  
+          const appointmentDate = new Date(date);
+          appointmentDate.setHours(hour, minute, 0, 0);
+  
+          // Skip times in the past
+          if (appointmentDate <= new Date()) {
+            continue;
+          }
+  
+          slots.push({
+            id: `${appointmentDate.toISOString()}`,
+            dateTime: appointmentDate,
+            formattedDateTime: formatDateTime(appointmentDate)
+          });
+        }
+      });
+    }
+  
+    return slots.sort((a, b) => a.dateTime - b.dateTime);
+  };
+  
+  const formatDateTime = (date) => {
+    return date.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   const handleFileUpload = (e) => {
@@ -123,28 +247,40 @@ export default function AppointmentsPage() {
     setMedicalFiles(files);
   };
 
-  const handleBookAppointment = () => {
+  const handleBookAppointment = async () => {
     setError('');
     setSuccess('');
-
+  
     if (!selectedSpecialty || !selectedDoctor || !selectedSlot) {
       setError('Please select specialty, doctor, and time slot.');
       return;
     }
-
-    const newAppointment = {
-      id: appointmentsHistory.length + 1,
-      date: selectedSlot,
-      doctor: mockDoctors[selectedSpecialty].find(d => d.id === selectedDoctor).name,
-      specialty: mockSpecialties.find(s => s.id === selectedSpecialty).name,
-      problem: problemDescription,
-      status: 'Upcoming',
-      files: medicalFiles
+  
+    // Format the selectedSlot as a JSON object
+    const appointmentTime = {
+      date: new Date(selectedSlot).toISOString().split('T')[0], // Date part (YYYY-MM-DD)
+      time: new Date(selectedSlot).toISOString().split('T')[1].split('.')[0] // Time part (HH:MM:SS)
     };
-
-    setAppointmentsHistory([...appointmentsHistory, newAppointment]);
-    setSuccess(`Appointment booked for ${new Date(selectedSlot).toLocaleString()}`);
-    resetForm();
+  
+    const appointmentData = {
+      doctorId: parseInt(selectedDoctor), // Ensure doctorId is a number
+      appointmentTime: appointmentTime,   // Send as JSON
+      problem: problemDescription,        // Match the field name expected in backend
+    };
+    
+    console.log("Appointment Data:", appointmentData);
+  
+    try {
+      setLoading(prev => ({ ...prev, booking: true }));
+      const response = await appointmentService.bookAppointment(appointmentData);
+      setSuccess(`Appointment booked successfully for ${formatDateTime(new Date(selectedSlot))}`);
+      resetForm();
+    } catch (err) {
+      setError(err.message || 'Failed to book appointment. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(prev => ({ ...prev, booking: false }));
+    }
   };
 
   const resetForm = () => {
@@ -154,9 +290,6 @@ export default function AppointmentsPage() {
     setProblemDescription('');
     setMedicalFiles([]);
   };
-
-  const doctorsForSelectedSpecialty = selectedSpecialty ? mockDoctors[selectedSpecialty] : [];
-  const slotsForSelectedDoctor = selectedDoctor ? mockSlots[selectedDoctor] : [];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -211,9 +344,12 @@ export default function AppointmentsPage() {
               value={selectedSpecialty}
               onChange={handleSpecialtyChange}
               label="Medical Specialty"
+              disabled={loading.specialties}
             >
               <MenuItem value=""><em>Select Specialty</em></MenuItem>
-              {mockSpecialties.map((spec) => (
+              {loading.specialties ? (
+                <MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>
+              ) : specialties.map((spec) => (
                 <MenuItem key={spec.id} value={spec.id}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ 
@@ -231,31 +367,39 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedSpecialty}>
-            <InputLabel>Select Doctor</InputLabel>
-            <Select
-              value={selectedDoctor}
-              onChange={handleDoctorChange}
-              label="Select Doctor"
-            >
-              <MenuItem value=""><em>Available Doctors</em></MenuItem>
-              {doctorsForSelectedSpecialty.map((doc) => (
-                <MenuItem key={doc.id} value={doc.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'secondary.main' }}>{doc.name[0]}</Avatar>
-                    <Box>
-                      <Typography>{doc.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {doc.qualifications} • {doc.experience} experience
-                      </Typography>
-                    </Box>
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedSpecialty || loading.doctors}>
+  <InputLabel>Select Doctor</InputLabel>
+  <Select
+    value={selectedDoctor}
+    onChange={handleDoctorChange}
+    label="Select Doctor"
+  >
+    <MenuItem value=""><em>Available Doctors</em></MenuItem>
+    {loading.doctors ? (
+      <MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>
+    ) : doctors.length === 0 ? (
+      <MenuItem disabled>No doctors available</MenuItem>
+    ) : (
+      doctors.map((doc) => (
+        <MenuItem key={doc.userId} value={doc.userId}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'secondary.main' }}>
+              {doc.firstName ? doc.firstName[0] : 'D'}
+            </Avatar>
+            <Box>
+              <Typography>Dr. {doc.firstName} {doc.lastName}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {doc.specialization} • {doc.years_of_experience} years experience
+              </Typography>
+            </Box>
+          </Box>
+        </MenuItem>
+      ))
+    )}
+  </Select>
+</FormControl>
 
-          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedDoctor}>
+          <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedDoctor || loading.slots}>
             <InputLabel>Available Time Slots</InputLabel>
             <Select
               value={selectedSlot}
@@ -263,11 +407,17 @@ export default function AppointmentsPage() {
               label="Available Time Slots"
             >
               <MenuItem value=""><em>Select Time Slot</em></MenuItem>
-              {slotsForSelectedDoctor.map((slot) => (
-                <MenuItem key={slot} value={slot}>
-                  {new Date(slot).toLocaleString()}
-                </MenuItem>
-              ))}
+              {loading.slots ? (
+                <MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>
+              ) : availableSlots.length === 0 ? (
+                <MenuItem disabled>No available slots</MenuItem>
+              ) : (
+                availableSlots.map((slot) => (
+                  <MenuItem key={slot.id} value={slot.id}>
+                    {slot.formattedDateTime}
+                  </MenuItem>
+                ))
+              )}
             </Select>
           </FormControl>
 
@@ -301,9 +451,10 @@ export default function AppointmentsPage() {
             size="large"
             fullWidth
             onClick={handleBookAppointment}
+            disabled={!selectedSpecialty || !selectedDoctor || !selectedSlot || loading.booking}
             sx={{ py: 1.5, fontWeight: 'bold' }}
           >
-            Confirm Appointment
+            {loading.booking ? <CircularProgress size={24} color="inherit" /> : "Confirm Appointment"}
           </Button>
         </Paper>
       )}
@@ -333,7 +484,7 @@ export default function AppointmentsPage() {
                     <ListItemText
                       primary={
                         <Typography variant="h6">
-                          {new Date(appointment.date).toLocaleDateString('en-US', {
+                          {new Date(appointment.appointment_time.date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
@@ -343,10 +494,7 @@ export default function AppointmentsPage() {
                       secondary={
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {appointment.doctor}
-                          </Typography>
-                          <Typography variant="body2">
-                            {appointment.specialty}
+                            Dr. {appointment.doctor_name} {/* Display doctor's name */}
                           </Typography>
                         </Box>
                       }
@@ -365,18 +513,8 @@ export default function AppointmentsPage() {
                   
                   <Box sx={{ p: 2 }}>
                     <Typography variant="body2" sx={{ mb: 1 }}>
-                      <strong>Problem:</strong> {appointment.problem || 'Not specified'}
+                      <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                     </Typography>
-                    {appointment.prescription && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Prescription:</strong> {appointment.prescription}
-                      </Typography>
-                    )}
-                    {appointment.files?.length > 0 && (
-                      <Typography variant="body2">
-                        <strong>Attachments:</strong> {appointment.files.length} file(s)
-                      </Typography>
-                    )}
                   </Box>
                 </Paper>
               ))}

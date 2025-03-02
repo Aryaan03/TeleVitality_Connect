@@ -25,8 +25,3 @@ type DoctorProfile struct {
 	ConsultationType     string `json:"consultationType"`
 	Availability         string `json:"availability"` // JSON string for availability
 }
-
-type Specialty struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
