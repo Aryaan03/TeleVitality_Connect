@@ -60,11 +60,29 @@ export default function DoctorProfilePage() {
     const fetchProfile = async () => {
       try {
         const profileData = await authService.getDoctorProfile(); // Fetch profile data from backend
-        setInitialValues(profileData);
 
-        // Parse availability from backend (if available)
+        // Format date of birth
+        let formattedDateOfBirth = '';
+        if (profileData.dateOfBirth) {
+          const date = new Date(profileData.dateOfBirth);
+          formattedDateOfBirth = date.toISOString().split('T')[0]; // Extract YYYY-MM-DD
+        }
+        let formattedExpiryDate = ''
+        if(profileData.licenseExpiryDate){
+          const date = new Date(profileData.licenseExpiryDate);
+          formattedExpiryDate = date.toISOString().split('T')[0];
+        }
+
+        setInitialValues({
+          ...profileData,
+          dateOfBirth: formattedDateOfBirth,
+          licenseExpiryDate: formattedExpiryDate
+        });
+
         if (profileData.availability) {
-          setAvailability(JSON.parse(profileData.availability));
+        let firstParse = JSON.parse(profileData.availability);
+        let parsedAvailability = JSON.parse(firstParse);
+        setAvailability(parsedAvailability);
         }
 
         setError('');
