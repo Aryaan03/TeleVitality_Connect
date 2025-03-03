@@ -17,7 +17,7 @@ func main() {
 	authHandler := &handlers.AuthHandler{DB: db}
 	profileHandler := &handlers.ProfileHandler{DB: db}
 	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db}
-	appointmentHandler := &handlers.AppointmentHandler{DB: db} // Initialize AppointmentHandler
+	appointmentHandler := &handlers.AppointmentHandler{DB: db}
 
 	r := mux.NewRouter()
 
@@ -40,6 +40,10 @@ func main() {
 	protectedDoctor.Use(handlers.JWTAuthMiddleware("doctor")) // Apply Doctor Role Middleware
 	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.GetDoctorProfile)).Methods("GET")
 	protectedDoctor.Handle("/profile", http.HandlerFunc(doctorProfileHandler.UpdateDoctorProfile)).Methods("PUT")
+
+	// New Doctor Appointment Routes
+	protectedDoctor.Handle("/appointments", http.HandlerFunc(appointmentHandler.GetDoctorAppointments)).Methods("GET")
+	protectedDoctor.Handle("/appointments/{id}", http.HandlerFunc(appointmentHandler.CancelAppointment)).Methods("DELETE")
 
 	// Appointment Routes
 	r.HandleFunc("/api/specialties", appointmentHandler.GetSpecialties).Methods("GET")

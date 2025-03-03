@@ -62,6 +62,7 @@ export const appointmentService = {
       throw new Error(error.message);
     }
   },
+  
   async getAppointmentHistory() {
     try {
       const token = localStorage.getItem('token');
@@ -72,6 +73,42 @@ export const appointmentService = {
       });
       if (!response.ok) {
         throw new Error('Failed to fetch appointment history');
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async getDoctorAppointments() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/doctor/appointments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch doctor appointments');
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async cancelAppointment(appointmentId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/doctor/appointments/${appointmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to cancel appointment');
       }
       return await response.json();
     } catch (error) {

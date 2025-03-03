@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/mux"
 )
 
 type AppointmentHandler struct {
@@ -250,6 +251,156 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(appointments)
+	} else {
+		log.Println("Invalid token claims")
+		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+	}
+}
+
+func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *http.Request) {
+	// Extract doctor ID from JWT token
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		log.Println("Error parsing token:", err)
+		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		doctorID := claims["user_id"].(float64)
+
+		// Query appointments for this doctor
+		rows, err := h.DB.Query(`
+			SELECT 
+				a.id, 
+				a.patient_id, 
+				a.doctor_id, 
+				a.appointment_time, 
+				a.problem_description, 
+				a.status,
+				p.first_name,
+				p.last_name
+			FROM appointments a
+			JOIN profiles p ON a.patient_id = p.user_id
+			WHERE a.doctor_id = $1
+			ORDER BY a.created_at DESC
+		`, int(doctorID))
+		if err != nil {
+			log.Println("Error querying doctor appointments:", err)
+			http.Error(w, `{"error": "Failed to fetch appointments"}`, http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var appointments []map[string]interface{}
+		for rows.Next() {
+			var (
+				id, patientID, docID              int
+				problemDesc, status               string
+				patientFirstName, patientLastName string
+				appointmentTimeJSON               []byte
+			)
+
+			if err := rows.Scan(
+				&id,
+				&patientID,
+				&docID,
+				&appointmentTimeJSON,
+				&problemDesc,
+				&status,
+				&patientFirstName,
+				&patientLastName,
+			); err != nil {
+				log.Println("Error scanning appointment:", err)
+				http.Error(w, `{"error": "Failed to scan appointments"}`, http.StatusInternalServerError)
+				return
+			}
+
+			// Parse appointment time JSON
+			var appointmentTime map[string]interface{}
+			if err := json.Unmarshal(appointmentTimeJSON, &appointmentTime); err != nil {
+				log.Println("Error unmarshaling appointment time:", err)
+				appointmentTime = map[string]interface{}{}
+			}
+
+			// Build the patient's full name
+			patientName := fmt.Sprintf("%s %s", patientFirstName, patientLastName)
+
+			// Create appointment object
+			appointment := map[string]interface{}{
+				"id":                  id,
+				"patient_id":          patientID,
+				"doctor_id":           docID,
+				"patient_name":        patientName,
+				"appointment_time":    appointmentTime,
+				"problem_description": problemDesc,
+				"status":              status,
+			}
+
+			appointments = append(appointments, appointment)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(appointments)
+	} else {
+		log.Println("Invalid token claims")
+		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+	}
+}
+
+// CancelAppointment cancels a specific appointment
+func (h *AppointmentHandler) CancelAppointment(w http.ResponseWriter, r *http.Request) {
+	// Extract appointment ID from URL
+	vars := mux.Vars(r)
+	appointmentID := vars["id"]
+
+	// Extract doctor ID from JWT token
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		log.Println("Error parsing token:", err)
+		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		doctorID := claims["user_id"].(float64)
+
+		// Verify the appointment belongs to this doctor before cancelling
+		var count int
+		err := h.DB.QueryRow("SELECT COUNT(*) FROM appointments WHERE id = $1 AND doctor_id = $2", appointmentID, int(doctorID)).Scan(&count)
+		if err != nil {
+			log.Println("Error verifying appointment ownership:", err)
+			http.Error(w, `{"error": "Failed to verify appointment"}`, http.StatusInternalServerError)
+			return
+		}
+
+		if count == 0 {
+			http.Error(w, `{"error": "Appointment not found or not authorized"}`, http.StatusNotFound)
+			return
+		}
+
+		// Update the appointment status to "Cancelled"
+		_, err = h.DB.Exec("UPDATE appointments SET status = 'Cancelled' WHERE id = $1", appointmentID)
+		if err != nil {
+			log.Println("Error cancelling appointment:", err)
+			http.Error(w, `{"error": "Failed to cancel appointment"}`, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Appointment cancelled successfully"})
 	} else {
 		log.Println("Invalid token claims")
 		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
