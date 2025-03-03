@@ -57,10 +57,10 @@ export default function AppointmentsPage() {
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [problemDescription, setProblemDescription] = useState('');
-  const [medicalFiles, setMedicalFiles] = useState([]);
   const [appointmentsHistory, setAppointmentsHistory] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [medicalFiles, setMedicalFiles] = useState([]);
   
   // State for data from API
   const [specialties, setSpecialties] = useState([]);
@@ -72,6 +72,8 @@ export default function AppointmentsPage() {
     slots: false,
     booking: false
   });
+
+  
 
   // Fetch specialties on component mount
   useEffect(() => {
@@ -266,17 +268,21 @@ export default function AppointmentsPage() {
       time: utcDate.toISOString().split('T')[1].split('.')[0], // Time part (HH:MM:SS)
     };
   
-    const appointmentData = {
-      doctorId: parseInt(selectedDoctor), // Ensure doctorId is a number
-      appointmentTime: appointmentTime,   // Send as JSON
-      problem: problemDescription,        // Match the field name expected in backend
-    };
+    const formData = new FormData();
+    formData.append('doctorId', selectedDoctor);
+    formData.append('appointmentTime', JSON.stringify(appointmentTime));
+    formData.append('problem', problemDescription);
   
-    console.log("Appointment Data:", appointmentData);
+    // Append each file to the FormData object
+    medicalFiles.forEach((file, index) => {
+      formData.append(`files`, file);
+    });
+  
+    console.log("Appointment Data:", formData);
   
     try {
       setLoading(prev => ({ ...prev, booking: true }));
-      const response = await appointmentService.bookAppointment(appointmentData);
+      const response = await appointmentService.bookAppointment(formData);
       setSuccess(`Appointment booked successfully for ${formatDateTime(new Date(selectedSlot))}`);
       resetForm();
     } catch (err) {
