@@ -51,9 +51,7 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-// New component: Calendar-like time slot selector
 function TimeSlotCalendar({ availableSlots, selectedSlot, onSelect }) {
-  // Group slots by date (YYYY-MM-DD)
   const groupedSlots = availableSlots.reduce((acc, slot) => {
     const dateKey = slot.dateTime.toISOString().split('T')[0];
     if (!acc[dateKey]) {
@@ -100,7 +98,6 @@ export default function AppointmentsPage() {
   const [success, setSuccess] = useState('');
   const [medicalFiles, setMedicalFiles] = useState([]);
   
-  // State for data from API
   const [specialties, setSpecialties] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -111,7 +108,16 @@ export default function AppointmentsPage() {
     booking: false
   });
 
-  // Fetch specialties on component mount
+  const fetchAppointmentHistory = async () => {
+    try {
+      const data = await appointmentService.getAppointmentHistory();
+      setAppointmentsHistory(data);
+    } catch (err) {
+      setError('Failed to load appointment history. Please try again later.');
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const fetchSpecialties = async () => {
       try {
@@ -131,16 +137,6 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     if (activeTab === 1) {
-      const fetchAppointmentHistory = async () => {
-        try {
-          const data = await appointmentService.getAppointmentHistory();
-          setAppointmentsHistory(data);
-        } catch (err) {
-          setError('Failed to load appointment history. Please try again later.');
-          console.error(err);
-        }
-      };
-  
       fetchAppointmentHistory();
     }
   }, [activeTab]);
@@ -182,8 +178,6 @@ export default function AppointmentsPage() {
       try {
         setLoading(prev => ({ ...prev, slots: true }));
         const availabilityData = await appointmentService.getDoctorAvailability(doctorId);
-        
-        // Process availability data into 30-minute slots
         const slots = processAvailabilityIntoTimeSlots(availabilityData);
         setAvailableSlots(slots);
       } catch (err) {
@@ -195,14 +189,12 @@ export default function AppointmentsPage() {
     }
   };
 
-  // Function to process doctor availability JSON into 30-minute time slots
   const processAvailabilityIntoTimeSlots = (availabilityData) => {
     const slots = [];
     const currentDate = new Date();
     const nextTwoWeeks = new Date(currentDate);
     nextTwoWeeks.setDate(nextTwoWeeks.getDate() + 14);
   
-    // Parse the availability JSON
     let availability;
     try {
       availability = typeof availabilityData === 'string' 
@@ -213,35 +205,27 @@ export default function AppointmentsPage() {
       return [];
     }
   
-    // Get day names
     const days = [
       "Sunday", "Monday", "Tuesday", "Wednesday", 
       "Thursday", "Friday", "Saturday"
     ];
   
-    // Loop through the next 14 days
     for (let d = 0; d < 7; d++) {
       const date = new Date(currentDate);
       date.setDate(date.getDate() + d);
       const dayName = days[date.getDay()];
   
-      // Skip if this day isn't enabled in doctor's availability
-      if (!availability[dayName] || !availability[dayName].enabled) {
-        continue;
-      }
+      if (!availability[dayName] || !availability[dayName].enabled) continue;
   
-      // Process each enabled time slot for the day
       availability[dayName].timeSlots.forEach(slot => {
         if (!slot.enabled) return;
   
-        // Convert slot times to minutes since midnight
         const [startHour, startMinute] = slot.startTime.split(':').map(Number);
         const [endHour, endMinute] = slot.endTime.split(':').map(Number);
   
         const startMinutes = startHour * 60 + startMinute;
         const endMinutes = endHour * 60 + endMinute;
   
-        // Create 30-minute intervals
         for (let time = startMinutes; time < endMinutes; time += 30) {
           const hour = Math.floor(time / 60);
           const minute = time % 60;
@@ -249,10 +233,7 @@ export default function AppointmentsPage() {
           const appointmentDate = new Date(date);
           appointmentDate.setHours(hour, minute, 0, 0);
   
-          // Skip times in the past
-          if (appointmentDate <= new Date()) {
-            continue;
-          }
+          if (appointmentDate <= new Date()) continue;
   
           slots.push({
             id: `${appointmentDate.toISOString()}`,
@@ -301,11 +282,9 @@ export default function AppointmentsPage() {
       return;
     }
   
-    // Convert the selected slot to UTC
     const selectedDate = new Date(selectedSlot);
     const utcDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
   
-    // Format the selectedSlot as a JSON object
     const appointmentTime = {
       date: utcDate.toISOString().split('T')[0],
       time: utcDate.toISOString().split('T')[1].split('.')[0],
@@ -324,6 +303,7 @@ export default function AppointmentsPage() {
       setLoading(prev => ({ ...prev, booking: true }));
       await appointmentService.bookAppointment(formData);
       setSuccess(`Appointment booked successfully for ${formatDateTime(new Date(selectedSlot))}`);
+      await fetchAppointmentHistory();
       resetForm();
     } catch (err) {
       setError(err.message || 'Failed to book appointment. Please try again.');
@@ -341,7 +321,6 @@ export default function AppointmentsPage() {
     setMedicalFiles([]);
   };
 
-  // Function to format appointment dates from history
   const formatAppointmentDateTime = (appointment) => {
     if (!appointment.appointment_time) return 'Invalid date';
     
@@ -484,7 +463,6 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          {/* Replaced the default Select for available time slots with a calendar-like view */}
           <Paper variant="outlined" sx={{ mb: 3, p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Available Time Slots
@@ -555,77 +533,91 @@ export default function AppointmentsPage() {
             Appointment History
           </Typography>
 
-    {appointmentsHistory.length === 0 ? (
-      <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-        No appointment history found
-      </Typography>
-    ) : (
-      <List sx={{ width: '100%' }}>
-        {appointmentsHistory.map((appointment) => (
-          <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
-            <ListItem>
-              <ListItemText
-                primary={
-                  <Typography variant="h6">
-                    {formatAppointmentDateTime(appointment)}
-                  </Typography>
-                }
-                secondary={
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      Dr. {appointment.doctor_name}
-                    </Typography>
-                  </Box>
-                }
-              />
-              <Chip 
-                label={appointment.status} 
-                color={appointment.status === 'Completed' ? 'success' : 'warning'}
-                sx={{ fontWeight: 'bold' }}
-              />
-              <IconButton>
-                <ExpandMoreIcon />
-              </IconButton>
-            </ListItem>
-            
-            <Divider />
-            
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
-              </Typography>
+          {appointmentsHistory.length === 0 ? (
+            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+              No appointment history found
+            </Typography>
+          ) : (
+            <Box sx={{ 
+              maxHeight: '60vh', 
+              overflow: 'auto',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: (theme) => theme.palette.grey[100],
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: (theme) => theme.palette.grey[400],
+                borderRadius: '4px',
+              },
+            }}>
+              <List sx={{ width: '100%' }}>
+                {appointmentsHistory.map((appointment) => (
+                  <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                    <ListItem>
+                      <ListItemText
+                        primary={
+                          <Typography variant="h6">
+                            {formatAppointmentDateTime(appointment)}
+                          </Typography>
+                        }
+                        secondary={
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                              Dr. {appointment.doctor_name}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                      <Chip 
+                        label={appointment.status} 
+                        color={appointment.status === 'Completed' ? 'success' : 'warning'}
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                      <IconButton>
+                        <ExpandMoreIcon />
+                      </IconButton>
+                    </ListItem>
+                    
+                    <Divider />
+                    
+                    <Box sx={{ p: 2 }}>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+                      </Typography>
 
-              {/* Display uploaded files */}
-              {appointment.files && appointment.files.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                    Uploaded Files:
-                  </Typography>
-                  <List>
-                    {appointment.files.map((file, index) => (
-                      <ListItem key={index}>
-                        <ListItemText
-                          primary={file.file_name}
-                        />
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleDownloadFile(file.file_name, file.file_data)}
-                        >
-                          Download
-                        </Button>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
+                      {appointment.files && appointment.files.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                            Uploaded Files:
+                          </Typography>
+                          <List>
+                            {appointment.files.map((file, index) => (
+                              <ListItem key={index}>
+                                <ListItemText
+                                  primary={file.file_name}
+                                />
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={() => handleDownloadFile(file.file_name, file.file_data)}
+                                >
+                                  Download
+                                </Button>
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Box>
+                      )}
+                    </Box>
+                  </Paper>
+                ))}
+              </List>
             </Box>
-          </Paper>
-        ))}
-      </List>
-    )}
-  </Paper>
-)}
+          )}
+        </Paper>
+      )}
     </Container>
   );
 }
