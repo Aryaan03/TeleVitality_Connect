@@ -97,6 +97,7 @@ export default function AppointmentsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [medicalFiles, setMedicalFiles] = useState([]);
+  const [expandedAppointments, setExpandedAppointments] = useState(new Set());
   
   const [specialties, setSpecialties] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -107,6 +108,10 @@ export default function AppointmentsPage() {
     slots: false,
     booking: false
   });
+
+  const validAppointmentsCount = appointmentsHistory.filter(
+    appt => appt.status !== 'Cancelled'
+  ).length;
 
   const fetchAppointmentHistory = async () => {
     try {
@@ -133,6 +138,7 @@ export default function AppointmentsPage() {
     };
 
     fetchSpecialties();
+    fetchAppointmentHistory();
   }, []);
 
   useEffect(() => {
@@ -140,6 +146,27 @@ export default function AppointmentsPage() {
       fetchAppointmentHistory();
     }
   }, [activeTab]);
+
+  const toggleAppointmentDetails = (appointmentId) => {
+    setExpandedAppointments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(appointmentId)) {
+        newSet.delete(appointmentId);
+      } else {
+        newSet.add(appointmentId);
+      }
+      return newSet;
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Cancelled': return 'error';
+      case 'Scheduled': return 'success';
+      case 'Completed': return 'primary';
+      default: return 'default';
+    }
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -369,7 +396,11 @@ export default function AppointmentsPage() {
         />
         <StyledTab 
           label={
-            <Badge badgeContent={appointmentsHistory.length} color="primary">
+            <Badge 
+              badgeContent={validAppointmentsCount} 
+              color="primary"
+              sx={{ '& .MuiBadge-badge': { right: -8, top: 8 } }}
+            >
               Appointment History
             </Badge>
           } 
@@ -572,45 +603,51 @@ export default function AppointmentsPage() {
                       />
                       <Chip 
                         label={appointment.status} 
-                        color={appointment.status === 'Completed' ? 'success' : 'warning'}
-                        sx={{ fontWeight: 'bold' }}
+                        color={getStatusColor(appointment.status)}
+                        sx={{ fontWeight: 'bold', mr: 2 }}
                       />
-                      <IconButton>
-                        <ExpandMoreIcon />
+                      <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                        <ExpandMoreIcon sx={{
+                          transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.3s'
+                        }} />
                       </IconButton>
                     </ListItem>
                     
-                    <Divider />
-                    
-                    <Box sx={{ p: 2 }}>
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
-                      </Typography>
-
-                      {appointment.files && appointment.files.length > 0 && (
-                        <Box sx={{ mt: 2 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                            Uploaded Files:
+                    {expandedAppointments.has(appointment.id) && (
+                      <>
+                        <Divider />
+                        <Box sx={{ p: 2 }}>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                           </Typography>
-                          <List>
-                            {appointment.files.map((file, index) => (
-                              <ListItem key={index}>
-                                <ListItemText
-                                  primary={file.file_name}
-                                />
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => handleDownloadFile(file.file_name, file.file_data)}
-                                >
-                                  Download
-                                </Button>
-                              </ListItem>
-                            ))}
-                          </List>
+
+                          {appointment.files && appointment.files.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                                Uploaded Files:
+                              </Typography>
+                              <List>
+                                {appointment.files.map((file, index) => (
+                                  <ListItem key={index}>
+                                    <ListItemText
+                                      primary={file.file_name}
+                                    />
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      onClick={() => handleDownloadFile(file.file_name, file.file_data)}
+                                    >
+                                      Download
+                                    </Button>
+                                  </ListItem>
+                                ))}
+                              </List>
+                            </Box>
+                          )}
                         </Box>
-                      )}
-                    </Box>
+                      </>
+                    )}
                   </Paper>
                 ))}
               </List>
