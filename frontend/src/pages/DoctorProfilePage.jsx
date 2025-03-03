@@ -7,8 +7,6 @@ import {
   Typography,
   MenuItem,
   Alert,
-  FormControlLabel,
-  Checkbox,
   Grid,
   Divider,
   CircularProgress,
@@ -17,12 +15,14 @@ import { useEffect, useState } from 'react';
 import DoctorAvailabilityCalendar from '../components/DoctorAvailabilityCalendar';
 import TimeSlotPicker from '../components/TimeSlotPicker';
 import { authService } from '../services/api'; // Import your API service
+import { useNavigate } from 'react-router-dom';
 
 export default function DoctorProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [initialValues, setInitialValues] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Enhanced availability state
   const [availability, setAvailability] = useState({

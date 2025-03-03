@@ -46,7 +46,7 @@ export default function DoctorLoginPage({ open, handleClose }) {
               localStorage.setItem('token', response.token);
               localStorage.setItem('role', "doctor")
               handleClose(); // Close modal
-              navigate('/doctor-profile'); // Redirect to profile page
+              navigate('/doctor/profile'); // Redirect to profile page
               //window.location.reload(); // Refresh the page or navigate to another route
             } catch (err) {
               setError(err.message || 'Login failed. Please try again.');

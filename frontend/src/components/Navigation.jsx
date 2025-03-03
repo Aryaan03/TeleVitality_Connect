@@ -107,7 +107,7 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
             {isLoggedIn && role === "doctor" && (
               <Button 
                 component={Link} 
-                to="/doctor-profile"
+                to="/doctor/profile"
                 startIcon={<Person />}
                 sx={navButtonStyles}
               >

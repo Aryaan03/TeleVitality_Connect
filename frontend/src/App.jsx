@@ -15,6 +15,7 @@ import DoctorLoginPage from './pages/DoctorLoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ProfileDisplay from './pages/ProfileDisplay';
 import MakeAppointmentPage from './pages/MakeAppointmentPage';
+import DoctorProfileDisplay from './pages/DoctorProfileDisplay';
 
 function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -67,11 +68,8 @@ function App() {
         } />
 
         {/* Doctor-specific routes */}
-        <Route path="/doctor-profile" element={
-          <ProtectedRoute>
-            <DoctorProfilePage />
-          </ProtectedRoute>
-        } />
+        <Route path="/doctor/profile" element={<DoctorProfileDisplay />} />
+        <Route path="/doctor/edit-profile" element={<DoctorProfilePage />} />
         <Route path="/doctor-appointments" element={
           <ProtectedRoute>
             <DoctorAppointmentsPage />
