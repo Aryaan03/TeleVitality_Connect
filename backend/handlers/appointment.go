@@ -110,7 +110,7 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 		patientID := claims["user_id"].(float64)
 		log.Println("Patient ID:", patientID)
 
-		// First decode as a raw map to inspect the data
+		// Decode the request body
 		var requestData map[string]interface{}
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -119,18 +119,13 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		// Log the raw request for debugging
-		log.Println("Raw request body:", string(bodyBytes))
-
 		if err := json.Unmarshal(bodyBytes, &requestData); err != nil {
-			log.Println("Error unmarshaling raw request:", err)
+			log.Println("Error unmarshaling request:", err)
 			http.Error(w, `{"error": "Invalid JSON in request body"}`, http.StatusBadRequest)
 			return
 		}
 
-		log.Printf("Parsed request data: %+v\n", requestData)
-
-		// Extract fields we need
+		// Extract fields
 		doctorID, ok := requestData["doctorId"].(float64)
 		if !ok {
 			log.Println("Invalid or missing doctorId")
@@ -160,8 +155,8 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 
 		// Insert into the database
 		_, err = h.DB.Exec(`
-            INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
-            VALUES ($1, $2, $3, $4)`,
+		INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
+		VALUES ($1, $2, $3, $4)`,
 			int(patientID), int(doctorID), appointmentTimeJSON, problemDesc)
 
 		if err != nil {

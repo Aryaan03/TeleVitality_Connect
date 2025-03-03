@@ -256,10 +256,14 @@ export default function AppointmentsPage() {
       return;
     }
   
+    // Convert the selected slot to UTC
+    const selectedDate = new Date(selectedSlot);
+    const utcDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
+  
     // Format the selectedSlot as a JSON object
     const appointmentTime = {
-      date: new Date(selectedSlot).toISOString().split('T')[0], // Date part (YYYY-MM-DD)
-      time: new Date(selectedSlot).toISOString().split('T')[1].split('.')[0] // Time part (HH:MM:SS)
+      date: utcDate.toISOString().split('T')[0], // Date part (YYYY-MM-DD)
+      time: utcDate.toISOString().split('T')[1].split('.')[0], // Time part (HH:MM:SS)
     };
   
     const appointmentData = {
@@ -267,7 +271,7 @@ export default function AppointmentsPage() {
       appointmentTime: appointmentTime,   // Send as JSON
       problem: problemDescription,        // Match the field name expected in backend
     };
-    
+  
     console.log("Appointment Data:", appointmentData);
   
     try {
@@ -289,6 +293,34 @@ export default function AppointmentsPage() {
     setSelectedSlot('');
     setProblemDescription('');
     setMedicalFiles([]);
+  };
+
+  // New function to correctly format appointment dates from the history
+  const formatAppointmentDateTime = (appointment) => {
+    if (!appointment.appointment_time) return 'Invalid date';
+    
+    try {
+      // Construct a proper date string with both date and time
+      const dateStr = appointment.appointment_time.date;
+      const timeStr = appointment.appointment_time.time;
+      
+      // Create a date object and adjust for timezone
+      const dateObj = new Date(`${dateStr}T${timeStr}`);
+      
+      // Format the date and time
+      return dateObj.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (err) {
+      console.error("Error formatting appointment date:", err);
+      return 'Invalid date format';
+    }
   };
 
   return (
@@ -368,36 +400,36 @@ export default function AppointmentsPage() {
           </FormControl>
 
           <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedSpecialty || loading.doctors}>
-  <InputLabel>Select Doctor</InputLabel>
-  <Select
-    value={selectedDoctor}
-    onChange={handleDoctorChange}
-    label="Select Doctor"
-  >
-    <MenuItem value=""><em>Available Doctors</em></MenuItem>
-    {loading.doctors ? (
-      <MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>
-    ) : doctors.length === 0 ? (
-      <MenuItem disabled>No doctors available</MenuItem>
-    ) : (
-      doctors.map((doc) => (
-        <MenuItem key={doc.userId} value={doc.userId}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'secondary.main' }}>
-              {doc.firstName ? doc.firstName[0] : 'D'}
-            </Avatar>
-            <Box>
-              <Typography>Dr. {doc.firstName} {doc.lastName}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {doc.specialization} • {doc.years_of_experience} years experience
-              </Typography>
-            </Box>
-          </Box>
-        </MenuItem>
-      ))
-    )}
-  </Select>
-</FormControl>
+            <InputLabel>Select Doctor</InputLabel>
+            <Select
+              value={selectedDoctor}
+              onChange={handleDoctorChange}
+              label="Select Doctor"
+            >
+              <MenuItem value=""><em>Available Doctors</em></MenuItem>
+              {loading.doctors ? (
+                <MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>
+              ) : doctors.length === 0 ? (
+                <MenuItem disabled>No doctors available</MenuItem>
+              ) : (
+                doctors.map((doc) => (
+                  <MenuItem key={doc.userId} value={doc.userId}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                        {doc.firstName ? doc.firstName[0] : 'D'}
+                      </Avatar>
+                      <Box>
+                        <Typography>Dr. {doc.firstName} {doc.lastName}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {doc.specialization} • {doc.years_of_experience} years experience
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
 
           <FormControl fullWidth sx={{ mb: 3 }} disabled={!selectedDoctor || loading.slots}>
             <InputLabel>Available Time Slots</InputLabel>
@@ -484,17 +516,13 @@ export default function AppointmentsPage() {
                     <ListItemText
                       primary={
                         <Typography variant="h6">
-                          {new Date(appointment.appointment_time.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {formatAppointmentDateTime(appointment)}
                         </Typography>
                       }
                       secondary={
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            Dr. {appointment.doctor_name} {/* Display doctor's name */}
+                            Dr. {appointment.doctor_name}
                           </Typography>
                         </Box>
                       }
