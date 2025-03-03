@@ -52,3 +52,87 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 
 The backend API now provides a robust foundation for managing user authentication, profiles, and appointment scheduling with role-based access control.
 
+### Frontend Development
+
+## **Features Implemented in This Sprint**
+
+### **Doctor Pages**
+- **Doctor Register Page**: Doctors can register with their details.
+- **Doctor Login Page**: Secure login functionality for doctors.
+- **Doctor Profile Page**:
+  - Added fields for specialties and availability schedules.
+  - Viewing and editing profiles are now separated for better usability.
+  - Doctors can update their availability slots.
+  - Enhanced profile display with a visually improved layout.
+
+### **Patient Pages**
+- **Appointments Page**:
+  - Patients can view their appointment history.
+  - Updated appointment slots functionality for scheduling.
+- **Profile Page**:
+  - Enhanced profile display with sections for personal, medical, and insurance details.
+  - Viewing and editing profiles are now separated.
+
+### **Home Page**
+- Improved visual design with better navigation and layout.
+
+### **General Enhancements**
+- Added specialty and availability schedules to doctor profiles.
+- Enhanced navigation across various pages.
+
+### **Testing**
+- Cypress (for end-to-end testing)
+
+---
+
+## **Cypress Test Cases**
+
+### Pages Covered:
+1. Doctor Profile Page
+2. Home Page
+3. Contact Page
+4. Forgot Password Page
+
+Test cases include:
+- Verifying page rendering.
+- Validating required fields in forms.
+- Mocking API responses for success and failure scenarios.
+- Checking navigation and redirection.
+
+---
+
+## **How to Run Cypress Tests**
+
+1. Start the development server:
+    
+    npm run dev
+    
+
+2. Open Cypress Test Runner:
+    
+    npx cypress open
+    
+
+3. Select "E2E Testing" and choose a browser.
+
+4. Run test files such as:
+    - `doctorProfile.cy.js`
+    - `homePage.cy.js`
+    - `contact.cy.js`
+    - `forgotPassword.cy.js`
+
+---
+
+## **Key Highlights of This Sprint**
+
+1. Added pages for doctor registration, login, profile management, and availability scheduling.
+2. Enhanced patient appointment functionality with history tracking and slot updates.
+3. Improved visual design of the Home Page and navigation across the platform.
+4. Added basic Cypress test cases for key pages like Doctor Profile, Home Page, Contact Page, and Forgot Password.
+
+---
+
+## **Future Enhancements**
+
+1. Add more comprehensive Cypress tests for other pages like Dashboard and Appointment Management.
+
