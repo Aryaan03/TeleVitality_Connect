@@ -50,6 +50,193 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 - **POST /api/appointments** - Books an appointment.
 - **GET /api/appointments/history** - Fetches appointment history for the user.
 
+# API Documentation - Authentication Endpoints
+
+## Base URL
+
+`http://yourdomain.com/api/auth`
+
+## Endpoints
+
+### 1. User Registration
+
+**Endpoint:** `/register` **Method:** `POST` **Description:** Registers a new user.
+
+#### Request Body:
+
+```json
+{
+  "username": "exampleUser",
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+#### Response:
+
+**Success (201 Created):**
+
+```json
+{
+  "message": "User created successfully"
+}
+```
+
+**Error (409 Conflict - Username or Email already exists):**
+
+```json
+{
+  "error": "Username already exists"
+}
+```
+
+---
+
+### 2. User Login
+
+**Endpoint:** `/login` **Method:** `POST` **Description:** Authenticates a user and returns a JWT token.
+
+#### Request Body:
+
+```json
+{
+  "username": "exampleUser",
+  "password": "securepassword"
+}
+```
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+  "message": "Login successful",
+  "token": "jwt-token-string"
+}
+```
+
+**Error (401 Unauthorized - Invalid credentials):**
+
+```json
+{
+  "error": "Invalid username or password"
+}
+```
+
+---
+
+### 3. Protected Dashboard
+
+**Endpoint:** `/dashboard` **Method:** `GET` **Description:** Retrieves user-specific information from a protected route.
+
+#### Headers:
+
+```json
+{
+  "Authorization": "Bearer jwt-token-string"
+}
+```
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+  "username": "exampleUser",
+  "user_id": 1,
+  "message": "Welcome to the protected dashboard"
+}
+```
+
+**Error (401 Unauthorized - Invalid or Missing Token):**
+
+```json
+{
+  "error": "Invalid token"
+}
+```
+
+---
+
+### 4. Doctor Registration
+
+**Endpoint:** `/doctor/register` **Method:** `POST` **Description:** Registers a new doctor.
+
+#### Request Body:
+
+```json
+{
+  "username": "DrExample",
+  "email": "doctor@example.com",
+  "password": "securepassword"
+}
+```
+
+#### Response:
+
+**Success (201 Created):**
+
+```json
+{
+  "message": "Doctor registered successfully"
+}
+```
+
+**Error (409 Conflict - Username or Email already exists):**
+
+```json
+{
+  "error": "Username already exists"
+}
+```
+
+---
+
+### 5. Doctor Login
+
+**Endpoint:** `/doctor/login` **Method:** `POST` **Description:** Authenticates a doctor and returns a JWT token.
+
+#### Request Body:
+
+```json
+{
+  "username": "DrExample",
+  "password": "securepassword"
+}
+```
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+  "message": "Login successful",
+  "token": "jwt-token-string"
+}
+```
+
+**Error (401 Unauthorized - Invalid credentials):**
+
+```json
+{
+  "error": "Invalid username or password"
+}
+```
+
+---
+
+## Authentication Middleware
+
+**Description:** Protects routes based on user roles.
+
+- If an endpoint requires authentication, the request must include the `Authorization` header with a valid JWT token.
+- Allowed roles can be specified per endpoint.
+
+
+
 The backend API now provides a robust foundation for managing user authentication, profiles, and appointment scheduling with role-based access control.
 
 ### Frontend Development
