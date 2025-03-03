@@ -283,6 +283,15 @@ export default function AppointmentsPage() {
     setMedicalFiles(files);
   };
 
+  const handleDownloadFile = (fileName, fileData) => {
+    const blob = new Blob([fileData], { type: 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   const handleBookAppointment = async () => {
     setError('');
     setSuccess('');
@@ -535,67 +544,88 @@ export default function AppointmentsPage() {
 
       {activeTab === 1 && (
         <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography 
-            variant="h4" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 'bold', 
-              mb: 3,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
-          >
+          <Typography variant="h4" gutterBottom sx={{ 
+            fontWeight: 'bold', 
+            mb: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
             <HistoryIcon fontSize="large" />
             Appointment History
           </Typography>
 
-          {appointmentsHistory.length === 0 ? (
-            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              No appointment history found
-            </Typography>
-          ) : (
-            <List sx={{ width: '100%' }}>
-              {appointmentsHistory.map((appointment) => (
-                <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
-                  <ListItem>
-                    <ListItemText
-                      primary={
-                        <Typography variant="h6">
-                          {formatAppointmentDateTime(appointment)}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box sx={{ mt: 1 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            Dr. {appointment.doctor_name}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                    <Chip 
-                      label={appointment.status} 
-                      color={appointment.status === 'Completed' ? 'success' : 'warning'}
-                      sx={{ fontWeight: 'bold' }}
-                    />
-                    <IconButton>
-                      <ExpandMoreIcon />
-                    </IconButton>
-                  </ListItem>
-                  
-                  <Divider />
-                  
-                  <Box sx={{ p: 2 }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+    {appointmentsHistory.length === 0 ? (
+      <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+        No appointment history found
+      </Typography>
+    ) : (
+      <List sx={{ width: '100%' }}>
+        {appointmentsHistory.map((appointment) => (
+          <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+            <ListItem>
+              <ListItemText
+                primary={
+                  <Typography variant="h6">
+                    {formatAppointmentDateTime(appointment)}
+                  </Typography>
+                }
+                secondary={
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      Dr. {appointment.doctor_name}
                     </Typography>
                   </Box>
-                </Paper>
-              ))}
-            </List>
-          )}
-        </Paper>
-      )}
+                }
+              />
+              <Chip 
+                label={appointment.status} 
+                color={appointment.status === 'Completed' ? 'success' : 'warning'}
+                sx={{ fontWeight: 'bold' }}
+              />
+              <IconButton>
+                <ExpandMoreIcon />
+              </IconButton>
+            </ListItem>
+            
+            <Divider />
+            
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+              </Typography>
+
+              {/* Display uploaded files */}
+              {appointment.files && appointment.files.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                    Uploaded Files:
+                  </Typography>
+                  <List>
+                    {appointment.files.map((file, index) => (
+                      <ListItem key={index}>
+                        <ListItemText
+                          primary={file.file_name}
+                        />
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleDownloadFile(file.file_name, file.file_data)}
+                        >
+                          Download
+                        </Button>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        ))}
+      </List>
+    )}
+  </Paper>
+)}
     </Container>
   );
 }

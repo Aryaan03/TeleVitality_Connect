@@ -6,11 +6,17 @@ type Specialty struct {
 }
 
 type Appointment struct {
-	ID                 int                    `json:"id"`
-	PatientID          int                    `json:"patient_id"`
-	DoctorID           int                    `json:"doctor_id"`
-	DoctorName         string                 `json:"doctor_name"`
-	AppointmentTime    map[string]interface{} `json:"appointment_time"`
-	ProblemDescription string                 `json:"problem_description"`
-	Status             string                 `json:"status"`
+	ID                 int               `json:"id"`
+	PatientID          int               `json:"patient_id"`
+	DoctorID           int               `json:"doctor_id"`
+	AppointmentTime    map[string]string `json:"appointment_time"`
+	ProblemDescription string            `json:"problem_description"`
+	Status             string            `json:"status"`
+	DoctorName         string            `json:"doctor_name"`
+	Files              []AppointmentFile `json:"files"`
+}
+
+type AppointmentFile struct {
+	FileName string `json:"file_name"`
+	FileData []byte `json:"file_data"`
 }
