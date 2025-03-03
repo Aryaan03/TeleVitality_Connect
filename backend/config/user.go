@@ -9,7 +9,7 @@ import (
 
 func ConnectDB() *sql.DB {
 
-	connStr := "postgres://postgres:password@localhost:5433/userauth?sslmode=disable"
+	connStr := "postgres://postgres:admin@localhost:5432/userauth?sslmode=disable"
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
