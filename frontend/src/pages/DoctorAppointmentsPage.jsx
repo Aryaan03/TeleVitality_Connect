@@ -5,12 +5,18 @@ import { authService } from '../services/api';
 
 export default function DoctorAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
+  const sampleAppointments = [
+    { id: 1, patientName: 'Alice Smith', date: '2025-03-05', time: '10:00' },
+    { id: 2, patientName: 'Bob Johnson', date: '2025-03-06', time: '14:30' },
+    { id: 3, patientName: 'Charlie Brown', date: '2025-03-07', time: '09:15' },
+  ];
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await authService.getDoctorAppointments(); // Add this in `api.js`
-        setAppointments(response);
+        // const response = await authService.getDoctorAppointments(); // Add this in `api.js`
+        // setAppointments(response);
+        setAppointments(sampleAppointments);
       } catch (error) {
         console.error('Failed to fetch appointments:', error);
       }
@@ -21,7 +27,7 @@ export default function DoctorAppointmentsPage() {
 
   const handleCancelAppointment = async (appointmentId) => {
     try {
-      await authService.cancelAppointment(appointmentId); // Add this in `api.js`
+      // await authService.cancelAppointment(appointmentId); // Add this in `api.js`
       setAppointments(appointments.filter((appt) => appt.id !== appointmentId));
     } catch (error) {
       console.error('Failed to cancel appointment:', error);
