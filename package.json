@@ -9,5 +9,8 @@
     "axios": "^1.7.9",
     "dayjs": "^1.11.13"
   },
-  "proxy": "http://localhost:8080"
+  "proxy": "http://localhost:8080",
+  "devDependencies": {
+    "cypress": "^14.1.0"
+  }
 }
