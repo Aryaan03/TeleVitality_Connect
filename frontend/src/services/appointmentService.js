@@ -42,27 +42,29 @@ export const appointmentService = {
     }
   },
 
-  async bookAppointment(appointmentData) {
+  async bookAppointment(formData) {
     try {
       const token = localStorage.getItem('token');
+      
       const response = await fetch(`${API_URL}/appointments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(appointmentData)
+        body: formData,
       });
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to book appointment');
       }
+  
       return await response.json();
     } catch (error) {
       throw new Error(error.message);
     }
   },
-  
+
   async getAppointmentHistory() {
     try {
       const token = localStorage.getItem('token');

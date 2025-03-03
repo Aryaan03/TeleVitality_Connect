@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -111,59 +112,72 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 		patientID := claims["user_id"].(float64)
 		log.Println("Patient ID:", patientID)
 
-		// Decode the request body
-		var requestData map[string]interface{}
-		bodyBytes, err := io.ReadAll(r.Body)
+		// Parse the multipart form
+		err := r.ParseMultipartForm(10 << 20) // 10 MB
 		if err != nil {
-			log.Println("Error reading request body:", err)
-			http.Error(w, `{"error": "Failed to read request body"}`, http.StatusBadRequest)
+			log.Println("Error parsing multipart form:", err)
+			http.Error(w, `{"error": "Failed to parse form data"}`, http.StatusBadRequest)
 			return
 		}
 
-		if err := json.Unmarshal(bodyBytes, &requestData); err != nil {
-			log.Println("Error unmarshaling request:", err)
-			http.Error(w, `{"error": "Invalid JSON in request body"}`, http.StatusBadRequest)
-			return
-		}
-
-		// Extract fields
-		doctorID, ok := requestData["doctorId"].(float64)
-		if !ok {
-			log.Println("Invalid or missing doctorId")
+		// Extract fields from the form
+		doctorIDStr := r.FormValue("doctorId")
+		doctorID, err := strconv.Atoi(doctorIDStr)
+		if err != nil {
+			log.Println("Invalid or missing doctorId:", err)
 			http.Error(w, `{"error": "Invalid or missing doctorId"}`, http.StatusBadRequest)
 			return
 		}
 
-		problemDesc, _ := requestData["problem"].(string)
+		problemDesc := r.FormValue("problem")
+		appointmentTimeJSON := r.FormValue("appointmentTime")
 
-		// Extract appointment time from the request
-		appointmentTimeData, ok := requestData["appointmentTime"].(map[string]interface{})
-		if !ok {
-			log.Println("Invalid or missing appointmentTime")
+		var appointmentTime map[string]interface{}
+		if err := json.Unmarshal([]byte(appointmentTimeJSON), &appointmentTime); err != nil {
+			log.Println("Error unmarshaling appointment time:", err)
 			http.Error(w, `{"error": "Invalid appointment time format"}`, http.StatusBadRequest)
 			return
 		}
-
-		// Convert the appointment time to JSON
-		appointmentTimeJSON, err := json.Marshal(appointmentTimeData)
-		if err != nil {
-			log.Println("Error marshaling appointment time:", err)
-			http.Error(w, `{"error": "Invalid appointment time format"}`, http.StatusBadRequest)
-			return
-		}
-
-		log.Println("Appointment Time JSON:", string(appointmentTimeJSON))
 
 		// Insert into the database
-		_, err = h.DB.Exec(`
-		INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
-		VALUES ($1, $2, $3, $4)`,
-			int(patientID), int(doctorID), appointmentTimeJSON, problemDesc)
-
+		var appointmentID int
+		err = h.DB.QueryRow(`
+            INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id`,
+			int(patientID), doctorID, appointmentTimeJSON, problemDesc).Scan(&appointmentID)
 		if err != nil {
 			log.Println("Error executing SQL query:", err)
 			http.Error(w, `{"error": "Failed to book appointment"}`, http.StatusInternalServerError)
 			return
+		}
+
+		// Handle file uploads
+		files := r.MultipartForm.File["files"]
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+				log.Println("Error opening file:", err)
+				continue
+			}
+			defer file.Close()
+
+			// Read the file content
+			fileBytes, err := io.ReadAll(file)
+			if err != nil {
+				log.Println("Error reading file:", err)
+				continue
+			}
+
+			// Store the file in the database or filesystem
+			_, err = h.DB.Exec(`
+                INSERT INTO appointment_files (appointment_id, file_name, file_data)
+                VALUES ($1, $2, $3)`,
+				appointmentID, fileHeader.Filename, fileBytes)
+			if err != nil {
+				log.Println("Error storing file:", err)
+				continue
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
