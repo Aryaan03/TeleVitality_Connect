@@ -217,9 +217,12 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
                 a.problem_description, 
                 a.status, 
                 d.first_name, 
-                d.last_name
+                d.last_name,
+                af.file_name,
+                af.file_data
             FROM appointments a
             JOIN doctor_profiles d ON a.doctor_id = d.user_id
+            LEFT JOIN appointment_files af ON a.id = af.appointment_id
             WHERE a.patient_id = $1
             ORDER BY a.created_at DESC`, int(patientID))
 		if err != nil {
@@ -234,6 +237,7 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 			var app models.Appointment
 			var doctorFirstName, doctorLastName string
 			var appointmentTimeJSON []byte
+			var fileName, fileData []byte
 
 			if err := rows.Scan(
 				&app.ID,
@@ -244,6 +248,8 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 				&app.Status,
 				&doctorFirstName,
 				&doctorLastName,
+				&fileName,
+				&fileData,
 			); err != nil {
 				log.Println("Error scanning appointment history:", err)
 				http.Error(w, `{"error": "Failed to scan appointment history"}`, http.StatusInternalServerError)
@@ -259,6 +265,14 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 
 			// Construct the doctor's name
 			app.DoctorName = fmt.Sprintf("%s %s", doctorFirstName, doctorLastName)
+
+			// Add file data if available
+			if fileName != nil && fileData != nil {
+				app.Files = append(app.Files, models.AppointmentFile{
+					FileName: string(fileName),
+					FileData: fileData,
+				})
+			}
 
 			appointments = append(appointments, app)
 		}

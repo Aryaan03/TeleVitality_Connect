@@ -16,13 +16,18 @@ import DoctorAvailabilityCalendar from '../components/DoctorAvailabilityCalendar
 import TimeSlotPicker from '../components/TimeSlotPicker';
 import { authService } from '../services/api'; // Import your API service
 import { useNavigate } from 'react-router-dom';
+import { appointmentService } from '../services/appointmentService';
 
 export default function DoctorProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [initialValues, setInitialValues] = useState(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [specialties, setSpecialties] = useState([]);
+  const [loading, setLoading] = useState({
+      specialties: false,
+      docprofile: false,
+  });
 
   // Enhanced availability state
   const [availability, setAvailability] = useState({
@@ -59,6 +64,7 @@ export default function DoctorProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        setLoading(prev => ({ ...prev, docprofile: true }));
         const profileData = await authService.getDoctorProfile(); // Fetch profile data from backend
 
         // Format date of birth
@@ -90,14 +96,30 @@ export default function DoctorProfilePage() {
         console.error('Error fetching profile:', err);
         setError('Unable to load profile. Please try again later.');
       } finally {
-        setLoading(false);
+        // setLoading(false);
+        setLoading(prev => ({ ...prev, docprofile: false }));
       }
     };
 
+    const fetchSpecialties = async () => {
+      try {
+        setLoading(prev => ({ ...prev, specialties: true }));
+        const data = await appointmentService.getSpecialties();
+        setSpecialties(data);
+      } catch (err) {
+        setError('Failed to load specialties. Please try again later.');
+        console.error(err);
+      } finally {
+        // setLoading(false);
+        setLoading(prev => ({ ...prev, specialties: false }));
+      }
+    };
+    
     fetchProfile();
+    fetchSpecialties();
   }, []);
 
-  if (loading) {
+  if (loading.docprofile) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress size={60} thickness={4} />
@@ -285,12 +307,15 @@ export default function DoctorProfilePage() {
                   helperText={touched.specialization && errors.specialization}
                 >
                   {/* Specialization Options */}
-                  <MenuItem value="Cardiology">Cardiology</MenuItem>
-                  <MenuItem value="Dermatology">Dermatology</MenuItem>
-                  <MenuItem value="Neurology">Neurology</MenuItem>
-                  <MenuItem value="Pediatrics">Pediatrics</MenuItem>
-                  <MenuItem value="Psychiatry">Psychiatry</MenuItem>
-                  <MenuItem value="Radiology">Radiology</MenuItem>
+                  {
+                    loading.specialties ? (<MenuItem disabled><CircularProgress size={20} /> Loading...</MenuItem>):
+                    specialties.map((speciality)=>(
+                      <MenuItem key={speciality.id} value={speciality.name}>
+                        {speciality.name}
+                      </MenuItem>
+                    ))
+                  }
+                  
                 </Field>
               </Grid>
 
