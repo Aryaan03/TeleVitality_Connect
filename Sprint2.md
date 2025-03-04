@@ -1023,7 +1023,7 @@ The backend API now provides a robust foundation for managing user authenticatio
 
 ---
 
-### Unit Tests
+## **Unit Tests**
 
 This sprint included comprehensive unit tests to ensure the reliability and correctness of our backend API. Below is a summary of the tests performed:
 
