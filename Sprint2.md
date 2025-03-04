@@ -22,8 +22,11 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
   - Implemented API to retrieve medical specialties.
   - Added API to fetch doctors based on selected specialty.
   - Created API to check doctor availability.
-  - Developed an API for booking appointments.
-  - Implemented an API to fetch appointment history.
+  - Developed an API for booking appointments, including support for file uploads.
+  - Implemented an API to fetch appointment history for patients.
+  - Implemented an API to fetch appointments for doctors.
+  - Developed an API to allow doctors to cancel appointments.
+  - Implemented an API to fetch appointment history for patients.
 
 ## Backend API Documentation
 
@@ -50,13 +53,9 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 - **POST /api/appointments** - Books an appointment.
 - **GET /api/appointments/history** - Fetches appointment history for the user.
 
-# API Documentation - Authentication Endpoints
+# API Documentation
 
-## Base URL
-
-`http://yourdomain.com/api/auth`
-
-## Endpoints
+## Authentication Endpoints
 
 ### 1. User Registration
 
@@ -226,11 +225,7 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 }
 ```
 
-## API Documentation - Profile Endpoints
-
-### Base URL
-
-Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be relative to that.
+## Profile Endpoints
 
 ### 1. Get User Profile
 
@@ -556,11 +551,7 @@ Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be 
 }
 ```
 
-## API Documentation - Appointment Endpoints
-
-### Base URL
-
-Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be relative to that.
+## Appointment Endpoints
 
 ### 1. Get Specialties
 
