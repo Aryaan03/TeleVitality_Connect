@@ -226,6 +226,335 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 }
 ```
 
+## API Documentation - Profile Endpoints
+
+### Base URL
+
+Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be relative to that.
+
+### 1. Get User Profile
+
+* **Endpoint:** `/profile`
+* **Method:** `GET`
+* **Description:** Retrieves the user's profile information.
+
+#### Headers:
+
+```json
+{
+"Authorization": "Bearer jwt-token-string"
+}
+```
+
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+"UserID": 123,
+"FirstName": "John",
+"LastName": "Doe",
+"DateOfBirth": "1990-01-01",
+"Gender": "Male",
+"PhoneNumber": "123-456-7890",
+"Address": "123 Main St",
+"ProblemDescription": "Example problem",
+"EmergencyAppointment": "yes",
+"PreferredCommunication": "email",
+"PreferredDoctor": "drSmith",
+"InsuranceProvider": "Example Insurance",
+"InsurancePolicyNumber": "Policy123",
+"ConsentTelemedicine": true
+}
+```
+
+**Success (200 OK - No Profile Exists):** Returns a default profile.
+
+```json
+{
+"UserID": 123,
+"FirstName": "",
+"LastName": "",
+"DateOfBirth": "",
+"Gender": "",
+"PhoneNumber": "",
+"Address": "",
+"ProblemDescription": "",
+"EmergencyAppointment": "no",
+"PreferredCommunication": "email",
+"PreferredDoctor": "drSmith",
+"InsuranceProvider": "",
+"InsurancePolicyNumber": "",
+"ConsentTelemedicine": false
+}
+```
+
+**Error (401 Unauthorized - Invalid or Missing Token):**
+
+```json
+{
+"error": "Invalid token"
+}
+```
+
+**Error (500 Internal Server Error):**
+
+```json
+{
+"error": "Failed to fetch profile data"
+}
+```
+
+
+---
+
+### 2. Update User Profile
+
+* **Endpoint:** `/profile`
+* **Method:** `POST`  (Using POST for updating since it's sending data)
+* **Description:** Updates the user's profile information. If a profile doesn't exist for the user, it creates one.
+
+#### Headers:
+
+```json
+{
+"Authorization": "Bearer jwt-token-string"
+}
+```
+
+
+#### Request Body:
+
+```json
+{
+"FirstName": "John",
+"LastName": "Doe",
+"DateOfBirth": "1990-01-01",
+"Gender": "Male",
+"PhoneNumber": "123-456-7890",
+"Address": "123 Main St",
+"ProblemDescription": "Updated problem description",
+"EmergencyAppointment": "yes",
+"PreferredCommunication": "phone",
+"PreferredDoctor": "drJones",
+"InsuranceProvider": "Updated Insurance",
+"InsurancePolicyNumber": "UpdatedPolicy123",
+"ConsentTelemedicine": true
+}
+```
+
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+"message": "Profile updated successfully"
+}
+```
+
+**Error (400 Bad Request - Invalid request body):**
+
+```json
+{
+"error": "Invalid request body"
+}
+```
+
+**Error (401 Unauthorized - Invalid or Missing Token):**
+
+```json
+{
+"error": "Invalid token"
+}
+```
+
+**Error (500 Internal Server Error):**
+
+```json
+{
+"error": "Failed to update profile"
+}
+```
+
+
+---
+
+## API Documentation - Doctor Profile Endpoints
+
+### Base URL
+
+Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be relative to that.
+
+### 1. Get Doctor Profile
+
+* **Endpoint:** `/doctor/profile`
+* **Method:** `GET`
+* **Description:** Retrieves the doctor's profile information.
+
+#### Headers:
+
+```json
+{
+"Authorization": "Bearer jwt-token-string"
+}
+```
+
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+"UserID": 456,
+"FirstName": "Jane",
+"LastName": "Smith",
+"DateOfBirth": "1985-05-05",
+"Gender": "Female",
+"PhoneNumber": "456-789-0123",
+"MedicalLicenseNumber": "MD12345",
+"IssuingMedicalBoard": "California Medical Board",
+"LicenseExpiryDate": "2025-12-31",
+"Specialization": "Cardiology",
+"YearsOfExperience": 10,
+"HospitalName": "General Hospital",
+"WorkAddress": "456 Oak St",
+"ConsultationType": "In-person",
+"Availability": {
+"Monday": ["09:00-12:00", "13:00-17:00"],
+"Tuesday": ["09:00-12:00"],
+"Wednesday": [],
+"Thursday": ["13:00-17:00"],
+"Friday": ["09:00-12:00", "13:00-17:00"],
+"Saturday": [],
+"Sunday": []
+}
+}
+```
+
+**Success (200 OK - No Profile Exists):** Returns a default profile.
+
+```json
+{
+"UserID": 456,
+"FirstName": "",
+"LastName": "",
+"DateOfBirth": "",
+"Gender": "",
+"PhoneNumber": "",
+"MedicalLicenseNumber": "",
+"IssuingMedicalBoard": "",
+"LicenseExpiryDate": "",
+"Specialization": "",
+"YearsOfExperience": 0,
+"HospitalName": "",
+"WorkAddress": "",
+"ConsultationType": "In-person",
+"Availability": null
+}
+```
+
+**Error (401 Unauthorized - Invalid or Missing Token):**
+
+```json
+{
+"error": "Invalid token"
+}
+```
+
+**Error (500 Internal Server Error):**
+
+```json
+{
+"error": "Failed to fetch profile data"
+}
+```
+
+
+---
+
+### 2. Update Doctor Profile
+
+* **Endpoint:** `/doctor/profile`
+* **Method:** `POST`  (Using POST for updating since it's sending data)
+* **Description:** Updates the doctor's profile information. If a profile doesn't exist for the doctor, it creates one.
+
+#### Headers:
+
+```json
+{
+"Authorization": "Bearer jwt-token-string"
+}
+```
+
+
+#### Request Body:
+
+```json
+{
+"FirstName": "Jane",
+"LastName": "Smith",
+"DateOfBirth": "1985-05-05",
+"Gender": "Female",
+"PhoneNumber": "456-789-0123",
+"MedicalLicenseNumber": "MD12345",
+"IssuingMedicalBoard": "California Medical Board",
+"LicenseExpiryDate": "2025-12-31",
+"Specialization": "Cardiology",
+"YearsOfExperience": 10,
+"HospitalName": "General Hospital",
+"WorkAddress": "456 Oak St",
+"ConsultationType": "In-person",
+"Availability": {
+"Monday": ["09:00-12:00", "13:00-17:00"],
+"Tuesday": ["09:00-12:00"],
+"Wednesday": [],
+"Thursday": ["13:00-17:00"],
+"Friday": ["09:00-12:00", "13:00-17:00"],
+"Saturday": [],
+"Sunday": []
+}
+}
+```
+
+
+#### Response:
+
+**Success (200 OK):**
+
+```json
+{
+"message": "Profile updated successfully"
+}
+```
+
+**Error (400 Bad Request - Invalid request body):**
+
+```json
+{
+"error": "Invalid request body"
+}
+```
+
+**Error (401 Unauthorized - Invalid or Missing Token):**
+
+```json
+{
+"error": "Invalid token"
+}
+```
+
+**Error (500 Internal Server Error):**
+
+```json
+{
+"error": "Failed to update profile"
+}
+```
 ---
 
 ## Authentication Middleware
