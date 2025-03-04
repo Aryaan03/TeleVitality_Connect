@@ -1,4 +1,4 @@
-describe('Doctor Registration Tests', () => {
+describe('Patient Registration Tests', () => {
     beforeEach(() => {
       cy.visit('/');
   
@@ -9,14 +9,14 @@ describe('Doctor Registration Tests', () => {
         .click();
   
       // Next, the modal likely has a button "REGISTER AS PATIENT" in uppercase:
-      cy.contains(/^register as doctor$/i, { timeout: 10000 })
+      cy.contains(/^register as patient$/i, { timeout: 10000 })
         .should('be.visible')
         .click();
     });
   
-    it('should display doctor registration form correctly', () => {
-      // Check the heading (case-insensitive check for "Doctor Registration"):
-      cy.get('h4', { timeout: 10000 }).contains(/doctor registration/i);
+    it('should display patient registration form correctly', () => {
+      // Check the heading (case-insensitive check for "Patient Registration"):
+      cy.get('h4', { timeout: 10000 }).contains(/patient registration/i);
   
       // Check for existence of all form fields:
       cy.get('input[name="username"]').should('exist');
@@ -54,7 +54,7 @@ describe('Doctor Registration Tests', () => {
   
     it('should show error for failed registration', () => {
       // Mock a 400 response
-      cy.intercept('POST', '/api/docregister', {
+      cy.intercept('POST', '/api/register', {
         statusCode: 400,
         body: { message: 'Registration failed' },
       }).as('registerRequest');
@@ -76,7 +76,7 @@ describe('Doctor Registration Tests', () => {
   
     it('should successfully register with valid credentials', () => {
       // Mock a successful 200 response
-      cy.intercept('POST', '/api/docregister', {
+      cy.intercept('POST', '/api/register', {
         statusCode: 200,
         body: { message: 'Registration successful' },
       }).as('registerRequest');
@@ -95,7 +95,7 @@ describe('Doctor Registration Tests', () => {
       cy.wait('@registerRequest');
   
       // Ensure we navigated away from the registration form
-      cy.get('h4').should('not.contain', 'Doctor Registration');
+      cy.get('h4').should('not.contain', 'Patient Registration');
   
       // Check for the Login prompt (case-insensitive partial match)
       cy.contains(/login/i).should('be.visible');
