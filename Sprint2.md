@@ -1086,9 +1086,9 @@ To run the unit tests, follow these steps:
 
 ## Frontend Development
 
-## **Features Implemented in This Sprint**
+### **Features Implemented in This Sprint**
 
-### **Doctor Pages**
+#### **Doctor Pages**
 - **Doctor Register Page**: Doctors can register with their details.
 - **Doctor Login Page**: Secure login functionality for doctors.
 - **Doctor Profile Page**:
@@ -1097,7 +1097,7 @@ To run the unit tests, follow these steps:
   - Doctors can update their availability slots.
   - Enhanced profile display with a visually improved layout.
 
-### **Patient Pages**
+#### **Patient Pages**
 - **Appointments Page**:
   - Patients can view their appointment history.
   - Updated appointment slots functionality for scheduling.
@@ -1105,16 +1105,17 @@ To run the unit tests, follow these steps:
   - Enhanced profile display with sections for personal, medical, and insurance details.
   - Viewing and editing profiles are now separated.
 
-### **Home Page**
+#### **Home Page**
 - Improved visual design with better navigation and layout.
-
-### **General Enhancements**
+  
+#### **General Enhancements**
 - Added specialty and availability schedules to doctor profiles.
 - Enhanced navigation across various pages.
+---
 
-### **Testing**
+## **Testing**
 
-#### Cypress End-to-End Tests (Frontend)
+### Cypress End-to-End Tests (Frontend)
 
 **Pages Covered:**
 1. Contact Page
@@ -1123,6 +1124,8 @@ To run the unit tests, follow these steps:
 4. Forgot Password
 5. Patient Authentication (Login/Register)
 6. Home Page
+
+---
 
 **Detailed Test Cases:**
 
@@ -1178,7 +1181,6 @@ To run the unit tests, follow these steps:
 - ✅ Verifies page loads successfully
 - ✅ Checks visibility of welcome message
 - ✅ Tests navigation links functionality
----
 
 ---
 
@@ -1204,6 +1206,7 @@ To run the unit tests, follow these steps:
     - `Register_Patient.cy.js`
 
 ---
+
 ### **Unit Tests (Frontend)**
 
 We've implemented comprehensive unit tests for critical authentication components using React Testing Library. These tests validate component rendering, user interactions, and form validation.
@@ -1238,13 +1241,16 @@ We've implemented comprehensive unit tests for critical authentication component
 
 ### **How to Run Frontend Unit Tests**
 
-1. **Install dependencies** (if not already installed):
+1. **Install dependencies** (if not already installed):<br>
    ```bash
    npm install
-2. **Run all tests**:
+   
+2. **Run all tests**:<br>
+   ```bash
    npm test
 
 ---
+
 ## **Key Highlights of This Sprint**
 
 1. Added pages for doctor registration, login, profile management, and availability scheduling.
