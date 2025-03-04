@@ -1113,23 +1113,72 @@ To run the unit tests, follow these steps:
 - Enhanced navigation across various pages.
 
 ### **Testing**
-- Cypress (for end-to-end testing)
 
+#### Cypress End-to-End Tests (Frontend)
+
+**Pages Covered:**
+1. Contact Page
+2. Doctor Authentication (Login/Register)
+3. Doctor Profile
+4. Forgot Password
+5. Patient Authentication (Login/Register)
+6. Home Page
+
+**Detailed Test Cases:**
+
+##### **Contact Page** (`contact.cy.js`)
+- ✅ Verifies page loads successfully
+- ✅ Checks contact form rendering with all fields
+- ✅ Validates contact information section (address, phone, email)
+- ✅ Tests form submission validation
+
+##### **Doctor Authentication**
+- **Login** (`doctorLogin.cy.js`):
+  - ✅ Renders login form correctly
+  - ✅ Shows validation errors for empty fields
+  - ✅ Displays error for invalid credentials
+  - ✅ Successfully logs in with valid credentials
+  - ✅ Shows forgot password alert
+
+- **Registration** (`doctorRegister.cy.js`):
+  - ✅ Renders registration form with all fields
+  - ✅ Validates password matching and complexity
+  - ✅ Shows terms & conditions validation
+  - ✅ Handles registration failures
+  - ✅ Successfully registers with valid credentials
+
+##### **Doctor Profile** (`doctorProfile.cy.js`)
+- ✅ Loads profile page successfully
+- ✅ Displays contact information section
+- ✅ Tests profile editing functionality
+- ✅ Validates availability schedule updates
+
+##### **Forgot Password** (`forgotPassword.cy.js`)
+- ✅ Loads password reset page
+- ✅ Renders email and password fields
+- ✅ Validates required fields
+- ✅ Checks password mismatch validation
+
+##### **Patient Authentication**
+- **Login** (`patientLogin.cy.js`):
+  - ✅ Renders login form correctly
+  - ✅ Shows validation errors for empty fields
+  - ✅ Displays error for invalid credentials
+  - ✅ Successfully logs in with valid credentials
+  - ✅ Closes modal when clicking outside
+
+- **Registration** (`patientRegister.cy.js`):
+  - ✅ Renders registration form with all fields
+  - ✅ Validates password matching and complexity
+  - ✅ Shows terms & conditions validation
+  - ✅ Handles registration failures
+  - ✅ Successfully registers with valid credentials
+
+##### **Home Page** (`homepage.cy.js`)
+- ✅ Verifies page loads successfully
+- ✅ Checks visibility of welcome message
+- ✅ Tests navigation links functionality
 ---
-
-## **Cypress Test Cases**
-
-### Pages Covered:
-1. Doctor Profile Page
-2. Home Page
-3. Contact Page
-4. Forgot Password Page
-
-Test cases include:
-- Verifying page rendering.
-- Validating required fields in forms.
-- Mocking API responses for success and failure scenarios.
-- Checking navigation and redirection.
 
 ---
 
@@ -1144,7 +1193,6 @@ Test cases include:
     
     npx cypress open
     
-
 3. Select "E2E Testing" and choose a browser.
 
 4. Run test files such as:
@@ -1152,9 +1200,51 @@ Test cases include:
     - `homePage.cy.js`
     - `contact.cy.js`
     - `forgotPassword.cy.js`
+    - `Login_Doctor.cy.js`
+    - `Register_Patient.cy.js`
+
+---
+### **Unit Tests (Frontend)**
+
+We've implemented comprehensive unit tests for critical authentication components using React Testing Library. These tests validate component rendering, user interactions, and form validation.
+
+#### Tested Components:
+1. **Login Page**
+2. **Patient Registration Page**
+
+#### Login Page Tests (`LoginPage.test.js`):
+- ✅ **Renders login form elements**
+  - Verifies presence of "Patient Login" heading
+  - Checks for Login button existence
+- ✅ **Form validation handling**
+  - Displays "Required" errors for empty username/password
+- ✅ **Forgot Password functionality**
+  - Triggers alert when clicking forgot password
+  - Verifies alert message content
+
+#### Registration Page Tests (`PatientRegisterPage.test.js`):
+- ✅ **Renders registration form elements**
+  - Confirms "Patient Registration" heading exists
+  - Verifies Register button presence
+- ✅ **Form validation checks**
+  - Shows "Required" errors for empty fields
+  - Displays password mismatch error
+  - Validates terms & conditions checkbox
+- ✅ **Input format validation**
+  - Checks email format validation
+  - Verifies minimum password length requirement
 
 ---
 
+### **How to Run Frontend Unit Tests**
+
+1. **Install dependencies** (if not already installed):
+   ```bash
+   npm install
+2. **Run all tests**:
+   npm test
+
+---
 ## **Key Highlights of This Sprint**
 
 1. Added pages for doctor registration, login, profile management, and availability scheduling.
