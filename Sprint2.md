@@ -28,32 +28,43 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
   - Developed an API to allow doctors to cancel appointments.
   - Implemented an API to fetch appointment history for patients.
 
-## Backend API Documentation
+# Backend API Documentation
 
-### User Authentication
-- **POST /api/auth/register** - Registers a new user.
-- **POST /api/auth/login** - Authenticates a user and returns a JWT token.
+#### User Authentication
 
-### Doctor Authentication
-- **POST /api/docregister** - Registers a new doctor.
-- **POST /api/doclogin** - Authenticates a doctor and returns a JWT token.
+*   **POST /api/register** - Registers a new user.
+*   **POST /api/login** - Authenticates a user and returns a JWT token.
+*   **POST /api/reset-password** - Resets user password.
 
-### User Profile
-- **GET /api/protected/profile** - Retrieves the logged-in user's profile.
-- **POST /api/protected/profile** - Saves or updates the user's profile.
+#### Doctor Authentication
 
-### Doctor Profile
-- **GET /api/doctor/profile** - Retrieves the logged-in doctor's profile.
-- **POST /api/doctor/profile** - Saves or updates the doctor's profile.
+*   **POST /api/docregister** - Registers a new doctor.
+*   **POST /api/doclogin** - Authenticates a doctor and returns a JWT token.
 
-### Appointments
-- **GET /api/specialties** - Retrieves available medical specialties.
-- **GET /api/doctors/{specialty}** - Fetches doctors based on specialty.
-- **GET /api/availability/{doctorId}** - Checks availability for a specific doctor.
-- **POST /api/appointments** - Books an appointment.
-- **GET /api/appointments/history** - Fetches appointment history for the user.
+#### User Profile
 
-# API Documentation
+*   **GET /api/protected/dashboard** - Retrieves content for the user dashboard (protected route).
+*   **GET /api/protected/profile** - Retrieves the logged-in user's profile.
+*   **PUT /api/protected/profile** - Saves or updates the user's profile.
+
+#### Doctor Profile
+
+*   **GET /api/doctor/profile** - Retrieves the logged-in doctor's profile.
+*   **PUT /api/doctor/profile** - Saves or updates the doctor's profile.
+
+#### Appointments
+
+*   **GET /api/specialties** - Retrieves available medical specialties.
+*   **GET /api/doctors?specialty={specialty_id}** - Fetches doctors based on specialty (specify specialty ID as a query parameter).
+*   **GET /api/doctor/availability?doctor={doctor_id}** - Checks availability for a specific doctor (specify doctor ID as a query parameter).
+*   **POST /api/appointments** - Books an appointment (requires patient JWT).
+*   **GET /api/appointments/history** - Fetches appointment history for the patient (requires patient JWT).
+*   **GET /api/doctor/appointments** - Fetches appointments for the logged-in doctor (requires doctor JWT).
+*   **DELETE /api/doctor/appointments/{id}** - Cancels a specific appointment (requires doctor JWT and appointment ID).
+
+
+
+# Detailed API Documentation
 
 ## Authentication Endpoints
 
