@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import PatientRegisterPage from '../PatientRegisterPage';
+import RegisterPage from '../PatientRegisterPage';
 
 describe('PatientRegisterPage', () => {
   const mockHandleClose = jest.fn();
   const mockOpenLogin = jest.fn();
 
   beforeEach(() => {
-    render(<PatientRegisterPage open={true} handleClose={mockHandleClose} openLogin={mockOpenLogin} />);
+    render(<RegisterPage open={true} handleClose={mockHandleClose} openLogin={mockOpenLogin} />);
   });
 
   test('renders registration form elements', () => {
