@@ -1,8 +1,6 @@
 # Sprint 2 Report
 
-## Work Completed in Sprint 2
-
-### Backend Development
+## Backend Development
 
 In this sprint, we focused on implementing and enhancing the backend API to support user and doctor functionalities. Below are the key improvements and additions:
 
@@ -28,7 +26,7 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
   - Developed an API to allow doctors to cancel appointments.
   - Implemented an API to fetch appointment history for patients.
 
-# Backend API Documentation
+## Backend API Documentation
 
 #### User Authentication
 
@@ -64,7 +62,7 @@ In this sprint, we focused on implementing and enhancing the backend API to supp
 
 
 
-# Detailed API Documentation
+## Detailed API Documentation
 
 ## Authentication Endpoints
 
@@ -1023,7 +1021,70 @@ Assuming your base URL is `http://yourdomain.com/api`, these endpoints would be 
 
 The backend API now provides a robust foundation for managing user authentication, profiles, and appointment scheduling with role-based access control.
 
-### Frontend Development
+---
+
+### Unit Tests
+
+This sprint included comprehensive unit tests to ensure the reliability and correctness of our backend API. Below is a summary of the tests performed:
+
+#### Authentication Tests (`auth_test.go`):
+
+*   **TestRegister:** Verifies the user registration process, including checking for existing usernames/emails and inserting new user data into the database.
+*   **TestLogin:** Validates the user login process, including retrieving user data from the database and comparing password hashes.
+*   **TestDoctorRegister:** Validates the doctor registration process, similar to the user registration test.
+*   **TestDoctorLogin:** Validates the doctor login process, similar to the user login test.
+
+#### Profile Tests (`profile_test.go`):
+
+*   **TestGetProfile:** Tests the retrieval of a user profile, covering cases where the profile exists, doesn't exist (returns a default profile), an invalid token is provided, or a database error occurs.
+*   **TestUpdateProfile:** Tests the updating of a user profile, covering successful updates, invalid request bodies, database errors during updates, and invalid tokens.
+
+#### Doctor Profile Tests (`doctor_profile_test.go`):
+
+*   **TestGetDoctorProfile:** Tests the retrieval of a doctor profile, ensuring that the data is correctly fetched and parsed.
+
+#### Appointment Tests (`appointments_test.go`):
+
+*   **TestGetSpecialties:** Tests the retrieval of medical specialties from the database.
+*   **TestGetDoctorsBySpecialty:** Tests fetching doctors based on a specific specialty.
+*   **TestGetDoctorAvailability:** Tests the retrieval of a doctor's availability schedule.
+*   **TestBookAppointment:** Tests the process of booking an appointment, including handling file uploads.  This includes validating the token and mocking DB interactions to ensure proper data persistence.
+*   **TestGetAppointmentHistory:** Tests the retrieval of a patient's appointment history.
+*   **TestGetDoctorAppointments:** Tests the retrieval of a doctor's appointment list.
+*   **TestCancelAppointment:** Tests the cancellation of an appointment by a doctor.
+*   **TestBookAppointment_InvalidToken:** Tests the `BookAppointment` endpoint with an invalid token.
+*   **TestGetAppointmentHistory_InvalidToken:** Tests the `GetAppointmentHistory` endpoint with an invalid token.
+*   **TestGetDoctorAppointments_InvalidToken:** Tests the `GetDoctorAppointments` endpoint with an invalid token.
+*   **TestCancelAppointment_InvalidToken:** Tests the `CancelAppointment` endpoint with an invalid token.
+*   **TestCancelAppointment_Unauthorized:** Tests the scenario where a doctor attempts to cancel an appointment that does not belong to them.
+*   **TestCancelAppointment_DatabaseError:** Tests the scenario where a database error occurs during the cancellation process.
+*   **TestGetDoctorAvailability_Error:** Tests the scenario where fetching doctor availability fails due to a database error.
+*   **TestGetDoctorsBySpecialty_Error:** Tests the scenario where fetching doctors by specialty fails due to a database error.
+*   **TestGetSpecialties_Error:** Tests the scenario where fetching specialties fails due to a database error.
+*   **TestBookAppointment_InvalidInput:** Tests the scenario where invalid input data is provided during appointment booking.
+*   **TestBookAppointment_DatabaseError:** Tests the scenario where a database error occurs during the appointment booking process.
+*   **TestGetAppointmentHistory_DatabaseError:** Tests the scenario where a database error occurs while fetching appointment history.
+*   **TestGetDoctorAppointments_DatabaseError:** Tests the scenario where a database error occurs while fetching doctor appointments.
+
+#### How to Run Tests
+
+To run the unit tests, follow these steps:
+
+1.  **Navigate to the Backend Directory:** Open your terminal and navigate to the `/backend` directory of the project.
+    ```bash
+    cd backend
+    ```
+2.  **Run the Tests:** Execute the following command to run all tests within the `handlers` package:
+    ```bash
+    go test -v ./handlers
+    ```
+
+    This command will execute all files ending with `_test.go` in the `handlers` package, providing detailed output of the test results. Make sure your database configurations are properly set up before running tests.
+
+
+---
+
+## Frontend Development
 
 ## **Features Implemented in This Sprint**
 
