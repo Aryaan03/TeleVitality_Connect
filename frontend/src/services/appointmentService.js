@@ -116,5 +116,18 @@ export const appointmentService = {
     } catch (error) {
       throw new Error(error.message);
     }
-  }
+  },
+
+  async getDoctorAppointmentTimes(doctorId) {
+    try {
+      const response = await fetch(`${API_URL}/appointmenttime?doctor_id=${doctorId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch appointment times');
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
 };

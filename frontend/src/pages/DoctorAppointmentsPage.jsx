@@ -75,15 +75,15 @@ export default function DoctorAppointmentsPage() {
         </Alert>
       )}
 
-      {!loading && appointments.length === 0 && (
+      {!loading && appointments && appointments.length === 0 && (
         <Alert severity="info">
           You have no scheduled appointments.
         </Alert>
       )}
 
-      {!loading && appointments.length > 0 && (
+      {!loading && appointments && appointments.length > 0 && (
         <List>
-          {appointments.map((appointment) => (
+          {appointments && appointments.map((appointment) => (
             <ListItem key={appointment.id} divider>
               <ListItemText 
                 primary={`Patient: ${appointment.patient_name || 'N/A'}`} 

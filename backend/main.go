@@ -49,6 +49,7 @@ func main() {
 	r.HandleFunc("/api/specialties", appointmentHandler.GetSpecialties).Methods("GET")
 	r.HandleFunc("/api/doctors", appointmentHandler.GetDoctorsBySpecialty).Methods("GET")
 	r.HandleFunc("/api/doctor/availability", appointmentHandler.GetDoctorAvailability).Methods("GET")
+	r.HandleFunc("/api/appointmenttime", appointmentHandler.GetDoctorAppointmentTimes).Methods("GET")
 
 	// Use r.Handle for routes with middleware
 	r.Handle("/api/appointments", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.BookAppointment))).Methods("POST")

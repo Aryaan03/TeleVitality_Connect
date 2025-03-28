@@ -116,7 +116,9 @@ export default function AppointmentsPage() {
   const fetchAppointmentHistory = async () => {
     try {
       const data = await appointmentService.getAppointmentHistory();
-      setAppointmentsHistory(data);
+      if (data != null){
+        setAppointmentsHistory(data);
+      }
     } catch (err) {
       setError('Failed to load appointment history. Please try again later.');
       console.error(err);
@@ -200,12 +202,34 @@ export default function AppointmentsPage() {
     const doctorId = event.target.value;
     setSelectedDoctor(doctorId);
     setSelectedSlot('');
+    let appointmentTimes = [];
+    if(doctorId) {
+      try{
+        const res = await appointmentService.getDoctorAppointmentTimes(doctorId);
+        const appointment_times = res.appointment_times;
+
+        appointmentTimes = appointment_times.map(timeStr => JSON.parse(timeStr));
+      } catch (err) {
+        setError('Failed to load scheduled appointment time slots. Please try again later.');
+        console.error(err);
+      }   
+    }
     
     if (doctorId) {
       try {
         setLoading(prev => ({ ...prev, slots: true }));
         const availabilityData = await appointmentService.getDoctorAvailability(doctorId);
-        const slots = processAvailabilityIntoTimeSlots(availabilityData);
+
+        let slots = processAvailabilityIntoTimeSlots(availabilityData);
+
+        if(appointmentTimes.length>0){
+          const bookedTimes = new Set(
+            appointmentTimes.map(appt => new Date(`${appt.date}T${appt.time}`).toISOString())
+          );
+  
+          slots = slots.filter(slot => !bookedTimes.has(slot.id));
+        }
+
         setAvailableSlots(slots);
       } catch (err) {
         setError('Failed to load available time slots. Please try again later.');
@@ -564,7 +588,7 @@ export default function AppointmentsPage() {
             Appointment History
           </Typography>
 
-          {appointmentsHistory.length === 0 ? (
+          {appointmentsHistory == null || appointmentsHistory.length === 0 ? (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
               No appointment history found
             </Typography>
@@ -584,7 +608,7 @@ export default function AppointmentsPage() {
               },
             }}>
               <List sx={{ width: '100%' }}>
-                {appointmentsHistory.map((appointment) => (
+                {appointmentsHistory && appointmentsHistory.map((appointment) => (
                   <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
                     <ListItem>
                       <ListItemText

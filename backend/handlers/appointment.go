@@ -434,3 +434,50 @@ func (h *AppointmentHandler) CancelAppointment(w http.ResponseWriter, r *http.Re
 		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
 	}
 }
+
+func (h *AppointmentHandler) GetDoctorAppointmentTimes(w http.ResponseWriter, r *http.Request) {
+	doctorIDStr := r.URL.Query().Get("doctor_id")
+	if doctorIDStr == "" {
+		http.Error(w, `{"error": "Doctor ID is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	doctorID, err := strconv.Atoi(doctorIDStr)
+	if err != nil {
+		http.Error(w, `{"error": "Invalid Doctor ID"}`, http.StatusBadRequest)
+		return
+	}
+
+	rows, err := h.DB.Query(`
+        SELECT appointment_time
+        FROM appointments
+        WHERE doctor_id = $1
+        ORDER BY appointment_time
+    `, doctorID)
+	if err != nil {
+		log.Println("Error querying appointment times:", err)
+		http.Error(w, `{"error": "Failed to fetch appointment times"}`, http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var appointmentTimes []string
+	for rows.Next() {
+		var appointmentTimeJSON []byte
+		if err := rows.Scan(&appointmentTimeJSON); err != nil {
+			log.Println("Error scanning appointment time:", err)
+			http.Error(w, `{"error": "Failed to process appointment times"}`, http.StatusInternalServerError)
+			return
+		}
+		appointmentTimes = append(appointmentTimes, string(appointmentTimeJSON))
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating appointment times:", err)
+		http.Error(w, `{"error": "Failed to process appointment times"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]string{"appointment_times": appointmentTimes})
+}
