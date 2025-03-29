@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, List, ListItem, ListItemText, IconButton, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Divider, Button, TextField } from '@mui/material';
 import { Cancel as CancelIcon } from '@mui/icons-material';
 import { authService } from '../services/api';
 import { appointmentService } from '../services/appointmentService';
@@ -8,6 +8,8 @@ export default function DoctorAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showNotesField, setShowNotesField] = useState({}); // State to toggle notes field for all appointments
+  const [notes, setNotes] = useState({}); // State to manage notes for all appointments
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -15,6 +17,12 @@ export default function DoctorAppointmentsPage() {
         setLoading(true);
         const response = await appointmentService.getDoctorAppointments();
         setAppointments(response);
+
+        const initialNotes = response.reduce((acc, appt) => {
+          acc[appt.id] = appt.notes || ""; 
+          return acc;
+        }, {});
+        setNotes(initialNotes)
         setError(null);
       } catch (error) {
         console.error('Failed to fetch appointments:', error);
@@ -27,11 +35,25 @@ export default function DoctorAppointmentsPage() {
     fetchAppointments();
   }, []);
 
+  const handleSaveNotes = async (appointmentId) => {
+    try {
+      const appointment_notes = notes[appointmentId];
+      await appointmentService.updateAppointmentNotes(appointmentId, appointment_notes);
+      setAppointments(prevAppointments =>
+        prevAppointments.map(appt =>
+          appt.id === appointmentId ? { ...appt, notes: appointment_notes } : appt
+        )
+      );
+      setShowNotesField(prev => ({ ...prev, [appointmentId]: false }));
+    } catch (err) {
+      console.error("Failed to save notes:", err);
+    }
+  };
+
   const handleCancelAppointment = async (appointmentId) => {
     try {
       await appointmentService.cancelAppointment(appointmentId);
       
-      // Update the appointment status in the state instead of removing it
       setAppointments(prevAppointments => 
         prevAppointments.map(appt => 
           appt.id === appointmentId ? { ...appt, status: 'Cancelled' } : appt
@@ -55,6 +77,12 @@ export default function DoctorAppointmentsPage() {
       console.error('Error formatting date time:', error);
       return 'Invalid date/time';
     }
+  };
+
+  const isAppointmentEnded = (appointmentTime) => {
+    const appointmentDateTime = new Date(`${appointmentTime.date}T${appointmentTime.time}`);
+    const appointmentEndTime = new Date(appointmentDateTime.getTime() + 30 * 60000);
+    return new Date() > appointmentEndTime;
   };
 
   return (
@@ -108,9 +136,44 @@ export default function DoctorAppointmentsPage() {
                 onClick={() => handleCancelAppointment(appointment.id)}
                 disabled={appointment.status === 'Cancelled'}
                 title="Cancel appointment"
+                sx={{marginRight: "2px"}}
               >
                 <CancelIcon color={appointment.status === 'Cancelled' ? 'disabled' : 'error'} />
               </IconButton>
+              {isAppointmentEnded(appointment.appointment_time) && (
+                <>
+                  <Button variant="outlined" size="small" sx={{marginRight: "6px"}}>Upload files</Button>
+                  {
+                    appointment.notes ? 
+                    <Button variant="outlined" size="small" sx={{marginRight: "6px"}} onClick={() => setShowNotesField(prev => ({ ...prev, [appointment.id]: true }))}>
+                      Update Notes
+                    </Button> :
+                    <Button variant="outlined" size="small" sx={{marginRight: "6px"}} onClick={() => setShowNotesField(prev => ({ ...prev, [appointment.id]: true }))}>
+                      Add Notes
+                    </Button>
+                  }
+                  {!showNotesField[appointment.id] && appointment.notes &&
+                    <Typography>{appointment.notes}</Typography>
+                  }
+                  {showNotesField[appointment.id] &&
+                    <>
+                      <TextField
+                        value={notes[appointment.id] || ""}
+                        onChange={(e) => setNotes(prev => ({ ...prev, [appointment.id]: e.target.value }))}
+                        multiline
+                        sx={{marginRight: "6px"}}
+                      />
+                      <Button 
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleSaveNotes(appointment.id)}
+                      >
+                        Save
+                      </Button>
+                    </>
+                  }
+                </>
+              )}
             </ListItem>
           ))}
         </List>

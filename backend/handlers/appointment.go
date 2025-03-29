@@ -312,6 +312,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				a.appointment_time, 
 				a.problem_description, 
 				a.status,
+				a.notes,
 				p.first_name,
 				p.last_name
 			FROM appointments a
@@ -331,6 +332,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 			var (
 				id, patientID, docID              int
 				problemDesc, status               string
+				notes                             sql.NullString
 				patientFirstName, patientLastName string
 				appointmentTimeJSON               []byte
 			)
@@ -342,6 +344,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				&appointmentTimeJSON,
 				&problemDesc,
 				&status,
+				&notes,
 				&patientFirstName,
 				&patientLastName,
 			); err != nil {
@@ -369,6 +372,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				"appointment_time":    appointmentTime,
 				"problem_description": problemDesc,
 				"status":              status,
+				"notes":               notes.String,
 			}
 
 			appointments = append(appointments, appointment)
@@ -480,4 +484,35 @@ func (h *AppointmentHandler) GetDoctorAppointmentTimes(w http.ResponseWriter, r 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string][]string{"appointment_times": appointmentTimes})
+}
+
+func (h *AppointmentHandler) UpdateAppointmentNotes(w http.ResponseWriter, r *http.Request) {
+	// Extract appointment ID from URL
+	vars := mux.Vars(r)
+	appointmentID := vars["id"]
+
+	// Parse the request body to get the new notes
+	var requestBody struct {
+		Notes string `json:"notes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Update the notes in the database
+	_, err := h.DB.Exec(`
+        UPDATE appointments
+        SET notes = $1
+        WHERE id = $2
+    `, requestBody.Notes, appointmentID)
+
+	if err != nil {
+		log.Println("Error updating appointment notes:", err)
+		http.Error(w, `{"error": "Failed to update notes"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Notes updated successfully"})
 }
