@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Divider, Button, TextField } from '@mui/material';
-import { Cancel as CancelIcon, Videocam as VideocamIcon } from '@mui/icons-material';
+import { Box, Typography, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Divider, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Cancel as CancelIcon, Videocam as VideocamIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { authService } from '../services/api';
 import { appointmentService } from '../services/appointmentService';
 
@@ -10,6 +10,8 @@ export default function DoctorAppointmentsPage() {
   const [error, setError] = useState(null);
   const [showNotesField, setShowNotesField] = useState({}); // State to toggle notes field for all appointments
   const [notes, setNotes] = useState({}); // State to manage notes for all appointments
+  const [previewFile, setPreviewFile] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -85,6 +87,140 @@ export default function DoctorAppointmentsPage() {
     return new Date() > appointmentEndTime;
   };
 
+  const handlePreviewFile = (file) => {
+    // Create a proper File object with correct MIME type
+    const fileType = file.name.split('.').pop().toLowerCase();
+    let mimeType = 'application/octet-stream';
+    
+    // Set proper MIME type based on file extension
+    switch (fileType) {
+      case 'pdf':
+        mimeType = 'application/pdf';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        mimeType = 'image/jpeg';
+        break;
+      case 'png':
+        mimeType = 'image/png';
+        break;
+      case 'txt':
+        mimeType = 'text/plain';
+        break;
+      default:
+        mimeType = 'application/octet-stream';
+    }
+
+    // Create blob from file data
+    const blob = new Blob([file], { type: mimeType });
+    const fileObj = new File([blob], file.name || 'file', { type: mimeType });
+    setPreviewFile(fileObj);
+    setPreviewOpen(true);
+  };
+
+  const handleDownloadFile = (fileName, fileData) => {
+    // Determine file type from extension
+    const fileType = fileName.split('.').pop().toLowerCase();
+    let mimeType = 'application/octet-stream';
+    
+    // Set proper MIME type based on file extension
+    switch (fileType) {
+      case 'pdf':
+        mimeType = 'application/pdf';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        mimeType = 'image/jpeg';
+        break;
+      case 'png':
+        mimeType = 'image/png';
+        break;
+      case 'txt':
+        mimeType = 'text/plain';
+        break;
+      default:
+        mimeType = 'application/octet-stream';
+    }
+
+    // Create blob from file data
+    const blob = new Blob([fileData], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    setPreviewFile(null);
+  };
+
+  const renderFilePreview = () => {
+    if (!previewFile) return null;
+
+    const fileType = previewFile.type;
+    const isImage = fileType.startsWith('image/');
+    const isPDF = fileType === 'application/pdf';
+    const isText = fileType === 'text/plain';
+
+    return (
+      <Dialog 
+        open={previewOpen} 
+        onClose={handleClosePreview}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Preview: {previewFile.name}</Typography>
+            <IconButton onClick={handleClosePreview}>
+              <CancelIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {isImage && (
+            <img 
+              src={URL.createObjectURL(previewFile)} 
+              alt={previewFile.name}
+              style={{ maxWidth: '100%', maxHeight: '70vh' }}
+            />
+          )}
+          {isPDF && (
+            <iframe
+              src={URL.createObjectURL(previewFile)}
+              style={{ width: '100%', height: '70vh' }}
+              title={previewFile.name}
+            />
+          )}
+          {isText && (
+            <Box sx={{ 
+              maxHeight: '70vh', 
+              overflow: 'auto',
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'monospace',
+              p: 2
+            }}>
+              {URL.createObjectURL(previewFile)}
+            </Box>
+          )}
+          {!isImage && !isPDF && !isText && (
+            <Typography color="text.secondary">
+              Preview not available for this file type. Please download to view.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePreview}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', p: 3 }}>
       <Typography variant="h3" gutterBottom>
@@ -128,18 +264,93 @@ export default function DoctorAppointmentsPage() {
                     <Typography component="span" variant="body2" display="block">
                       Status: {appointment.status || 'Scheduled'}
                     </Typography>
+
+                    {/* Add Files Section */}
+                    {appointment.files && appointment.files.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
+                          Patient&apos;s Medical Reports:
+                        </Typography>
+                        <List>
+                          {appointment.files.map((file, index) => (
+                            <ListItem 
+                              key={index}
+                              sx={{ 
+                                bgcolor: 'background.paper',
+                                borderRadius: 1,
+                                mb: 1,
+                                border: '1px solid',
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <ListItemText 
+                                primary={file.file_name}
+                                secondary={`${(file.file_data.length / 1024).toFixed(2)} KB`}
+                              />
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<VisibilityIcon />}
+                                onClick={() => {
+                                  const fileType = file.file_name.split('.').pop().toLowerCase();
+                                  let mimeType = file.file_type || 'application/octet-stream';
+                                  
+                                  // If file_type is not provided, determine from extension
+                                  if (!file.file_type) {
+                                    switch (fileType) {
+                                      case 'pdf':
+                                        mimeType = 'application/pdf';
+                                        break;
+                                      case 'jpg':
+                                      case 'jpeg':
+                                        mimeType = 'image/jpeg';
+                                        break;
+                                      case 'png':
+                                        mimeType = 'image/png';
+                                        break;
+                                      case 'txt':
+                                        mimeType = 'text/plain';
+                                        break;
+                                      default:
+                                        mimeType = 'application/octet-stream';
+                                    }
+                                  }
+
+                                  const blob = new Blob([file.file_data], { type: mimeType });
+                                  const fileObj = new File([blob], file.file_name, { type: mimeType });
+                                  handlePreviewFile(fileObj);
+                                }}
+                                sx={{ mr: 1 }}
+                              >
+                                Preview
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => handleDownloadFile(file.file_name, file.file_data)}
+                              >
+                                Download
+                              </Button>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+
+                    {/* Video Consultation Button */}
                     {appointment.meet_link && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<VideocamIcon />}
-                        href={appointment.meet_link}
-                        target="_blank"
-                        size="small"
-                        sx={{ mt: 1 }}
-                      >
-                        Join Video Consultation
-                      </Button>
+                      <Box sx={{ mt: 2 }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={<VideocamIcon />}
+                          href={appointment.meet_link}
+                          target="_blank"
+                          size="small"
+                        >
+                          Join Video Consultation
+                        </Button>
+                      </Box>
                     )}
                   </>
                 }
@@ -168,29 +379,14 @@ export default function DoctorAppointmentsPage() {
                   {!showNotesField[appointment.id] && appointment.notes &&
                     <Typography>{appointment.notes}</Typography>
                   }
-                  {showNotesField[appointment.id] &&
-                    <>
-                      <TextField
-                        value={notes[appointment.id] || ""}
-                        onChange={(e) => setNotes(prev => ({ ...prev, [appointment.id]: e.target.value }))}
-                        multiline
-                        sx={{marginRight: "6px"}}
-                      />
-                      <Button 
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleSaveNotes(appointment.id)}
-                      >
-                        Save
-                      </Button>
-                    </>
-                  }
                 </>
               )}
             </ListItem>
           ))}
         </List>
       )}
+
+      {renderFilePreview()}
     </Box>
   );
 }
