@@ -227,6 +227,20 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		patientID := claims["user_id"].(float64)
 
+		// First, update past appointments to completed status
+		updatePastAppointmentsQuery := `
+			UPDATE appointments 
+			SET status = 'Completed' 
+			WHERE patient_id = $1 
+			AND status = 'Scheduled' 
+			AND appointment_time::date < CURRENT_DATE
+			OR (appointment_time::date = CURRENT_DATE AND appointment_time::time < CURRENT_TIME)
+		`
+		_, err := h.DB.Exec(updatePastAppointmentsQuery, int(patientID))
+		if err != nil {
+			log.Printf("Error updating past appointments: %v", err)
+		}
+
 		// Query the database for the patient's appointment history
 		rows, err := h.DB.Query(`
             SELECT 
@@ -240,12 +254,21 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
                 d.last_name,
                 af.file_name,
                 af.file_data,
-                a.meet_link
+                a.meet_link,
+                a.cancellation_reason
             FROM appointments a
             JOIN doctor_profiles d ON a.doctor_id = d.user_id
             LEFT JOIN appointment_files af ON a.id = af.appointment_id
             WHERE a.patient_id = $1
-            ORDER BY a.created_at DESC`, int(patientID))
+            ORDER BY 
+                CASE 
+                    WHEN a.status = 'Scheduled' THEN 1
+                    WHEN a.status = 'Completed' THEN 2
+                    WHEN a.status = 'Cancelled' THEN 3
+                    ELSE 4
+                END,
+                (a.appointment_time->>'date')::date ASC,
+                (a.appointment_time->>'time')::time ASC`, int(patientID))
 		if err != nil {
 			log.Println("Error querying appointment history:", err)
 			http.Error(w, `{"error": "Failed to fetch appointment history"}`, http.StatusInternalServerError)
@@ -260,6 +283,7 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 			var appointmentTimeJSON []byte
 			var fileName, fileData []byte
 			var meetLink sql.NullString
+			var cancellationReason sql.NullString
 
 			if err := rows.Scan(
 				&app.ID,
@@ -273,6 +297,7 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 				&fileName,
 				&fileData,
 				&meetLink,
+				&cancellationReason,
 			); err != nil {
 				log.Println("Error scanning appointment history:", err)
 				http.Error(w, `{"error": "Failed to scan appointment history"}`, http.StatusInternalServerError)
@@ -291,6 +316,9 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 
 			// Set the MeetLink from the NullString
 			app.MeetLink = meetLink.String
+
+			// Set the CancellationReason from the NullString
+			app.CancellationReason = cancellationReason.String
 
 			// Add file data if available
 			if fileName != nil && fileData != nil {
@@ -348,6 +376,20 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		doctorID := claims["user_id"].(float64)
 
+		// First, update past appointments to completed status
+		updatePastAppointmentsQuery := `
+			UPDATE appointments 
+			SET status = 'Completed' 
+			WHERE doctor_id = $1 
+			AND status = 'Scheduled' 
+			AND (appointment_time->>'date')::date < CURRENT_DATE
+			OR ((appointment_time->>'date')::date = CURRENT_DATE AND (appointment_time->>'time')::time < CURRENT_TIME)
+		`
+		_, err := h.DB.Exec(updatePastAppointmentsQuery, int(doctorID))
+		if err != nil {
+			log.Printf("Error updating past appointments: %v", err)
+		}
+
 		// Query appointments for this doctor
 		rows, err := h.DB.Query(`
 			SELECT 
@@ -360,11 +402,22 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				a.notes,
 				a.meet_link,
 				p.first_name,
-				p.last_name
+				p.last_name,
+				af.file_name,
+				af.file_data
 			FROM appointments a
 			JOIN profiles p ON a.patient_id = p.user_id
+			LEFT JOIN appointment_files af ON a.id = af.appointment_id
 			WHERE a.doctor_id = $1
-			ORDER BY a.created_at DESC
+			ORDER BY 
+				CASE 
+					WHEN a.status = 'Scheduled' THEN 1
+					WHEN a.status = 'Completed' THEN 2
+					WHEN a.status = 'Cancelled' THEN 3
+					ELSE 4
+				END,
+				(appointment_time->>'date')::date ASC,
+				(appointment_time->>'time')::time ASC
 		`, int(doctorID))
 		if err != nil {
 			log.Println("Error querying doctor appointments:", err)
@@ -382,6 +435,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				meetLink                          sql.NullString
 				patientFirstName, patientLastName string
 				appointmentTimeJSON               []byte
+				fileName, fileData                []byte
 			)
 
 			if err := rows.Scan(
@@ -395,6 +449,8 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				&meetLink,
 				&patientFirstName,
 				&patientLastName,
+				&fileName,
+				&fileData,
 			); err != nil {
 				log.Println("Error scanning appointment:", err)
 				http.Error(w, `{"error": "Failed to scan appointments"}`, http.StatusInternalServerError)
@@ -422,6 +478,34 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				"status":              status,
 				"notes":               notes.String,
 				"meet_link":           meetLink.String,
+				"files":               []map[string]interface{}{},
+			}
+
+			// Add file data if available
+			if fileName != nil && fileData != nil {
+				// Determine file type from extension
+				fileType := "application/octet-stream"
+				ext := strings.ToLower(filepath.Ext(string(fileName)))
+				switch ext {
+				case ".pdf":
+					fileType = "application/pdf"
+				case ".jpg", ".jpeg":
+					fileType = "image/jpeg"
+				case ".png":
+					fileType = "image/png"
+				case ".txt":
+					fileType = "text/plain"
+				}
+
+				// Encode file data to base64
+				base64Data := base64.StdEncoding.EncodeToString(fileData)
+
+				file := map[string]interface{}{
+					"file_name":   string(fileName),
+					"file_type":   fileType,
+					"base64_data": base64Data,
+				}
+				appointment["files"] = append(appointment["files"].([]map[string]interface{}), file)
 			}
 
 			appointments = append(appointments, appointment)
@@ -437,9 +521,26 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 
 // CancelAppointment cancels a specific appointment
 func (h *AppointmentHandler) CancelAppointment(w http.ResponseWriter, r *http.Request) {
-	// Extract appointment ID from URL
+	// Get appointment ID from URL parameters
 	vars := mux.Vars(r)
-	appointmentID := vars["id"]
+	appointmentIDStr := vars["id"]
+	appointmentID, err := strconv.Atoi(appointmentIDStr)
+	if err != nil {
+		log.Println("Error parsing appointment ID:", err)
+		http.Error(w, `{"error": "Invalid appointment ID"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Parse request body for cancellation reason
+	var requestBody struct {
+		CancellationReason string `json:"cancellation_reason"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		log.Println("Error decoding request body:", err)
+		http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+		return
+	}
 
 	// Extract doctor ID from JWT token
 	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
@@ -472,8 +573,8 @@ func (h *AppointmentHandler) CancelAppointment(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		// Update the appointment status to "Cancelled"
-		_, err = h.DB.Exec("UPDATE appointments SET status = 'Cancelled' WHERE id = $1", appointmentID)
+		// Update the appointment status to "Cancelled" and store the cancellation reason
+		_, err = h.DB.Exec("UPDATE appointments SET status = 'Cancelled', cancellation_reason = $1 WHERE id = $2", requestBody.CancellationReason, appointmentID)
 		if err != nil {
 			log.Println("Error cancelling appointment:", err)
 			http.Error(w, `{"error": "Failed to cancel appointment"}`, http.StatusInternalServerError)

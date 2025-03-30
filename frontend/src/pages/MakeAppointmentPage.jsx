@@ -25,7 +25,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Grid
 } from '@mui/material';
 import { 
   Schedule as ScheduleIcon, 
@@ -96,6 +97,7 @@ function TimeSlotCalendar({ availableSlots, selectedSlot, onSelect }) {
 
 export default function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState(0);
+  const [appointmentStatusTab, setAppointmentStatusTab] = useState(0);
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
@@ -115,7 +117,27 @@ export default function AppointmentsPage() {
     specialties: false,
     doctors: false,
     slots: false,
-    booking: false
+    booking: false,
+    history: false
+  });
+
+  // Group appointments by status
+  const groupedAppointments = appointmentsHistory.reduce((acc, appointment) => {
+    const status = appointment.status || 'Scheduled';
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    acc[status].push(appointment);
+    return acc;
+  }, {});
+
+  // Sort appointments within each group by date and time
+  Object.keys(groupedAppointments).forEach(status => {
+    groupedAppointments[status].sort((a, b) => {
+      const dateA = new Date(`${a.appointment_time.date}T${a.appointment_time.time}`);
+      const dateB = new Date(`${b.appointment_time.date}T${b.appointment_time.time}`);
+      return dateA - dateB;
+    });
   });
 
   const validAppointmentsCount = appointmentsHistory.filter(
@@ -529,6 +551,10 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleAppointmentStatusTabChange = (event, newValue) => {
+    setAppointmentStatusTab(newValue);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography 
@@ -757,168 +783,512 @@ export default function AppointmentsPage() {
       )}
 
       {activeTab === 1 && (
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h4" gutterBottom sx={{ 
-            fontWeight: 'bold', 
-            mb: 3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1
-          }}>
-            <HistoryIcon fontSize="large" />
+        <Paper sx={{ mt: 4, p: 3 }}>
+          <Typography variant="h4" gutterBottom>
             Appointment History
           </Typography>
 
-          {appointmentsHistory == null || appointmentsHistory.length === 0 ? (
-            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              No appointment history found
-            </Typography>
+          {loading.history ? (
+            <Box display="flex" justifyContent="center" my={4}>
+              <CircularProgress />
+            </Box>
+          ) : appointmentsHistory.length === 0 ? (
+            <Typography>No appointments found</Typography>
           ) : (
-            <Box sx={{ 
-              maxHeight: '60vh', 
-              overflow: 'auto',
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: (theme) => theme.palette.grey[100],
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: (theme) => theme.palette.grey[400],
-                borderRadius: '4px',
-              },
-            }}>
-              <List sx={{ width: '100%' }}>
-                {appointmentsHistory && appointmentsHistory.map((appointment) => (
-                  <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
-                    <ListItem>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6">
-                            {formatAppointmentDateTime(appointment)}
-                          </Typography>
-                        }
-                        secondary={
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                              Dr. {appointment.doctor_name}
-                            </Typography>
-                          </Box>
-                        }
-                      />
+            <Box>
+              <Tabs
+                value={appointmentStatusTab}
+                onChange={handleAppointmentStatusTabChange}
+                sx={{
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  mb: 3,
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: 'primary.main',
+                    height: 3,
+                  },
+                }}
+              >
+                <Tab 
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      Scheduled
                       <Chip 
-                        label={appointment.status} 
-                        color={getStatusColor(appointment.status)}
-                        sx={{ fontWeight: 'bold', mr: 2 }}
+                        label={groupedAppointments['Scheduled']?.length || 0} 
+                        size="small" 
+                        color="success"
+                        sx={{ ml: 1 }}
                       />
-                      <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
-                        <ExpandMoreIcon sx={{
-                          transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
-                          transition: 'transform 0.3s'
-                        }} />
-                      </IconButton>
-                    </ListItem>
-                    
-                    {expandedAppointments.has(appointment.id) && (
-                      <>
-                        <Divider />
-                        <Box sx={{ p: 2 }}>
-                          <Typography variant="body2" sx={{ mb: 1 }}>
-                            <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
-                          </Typography>
-                          
-                          {appointment.files && appointment.files.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                              <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
-                                Medical Reports:
-                              </Typography>
-                              <List>
-                                {appointment.files.map((file, index) => (
-                                  <ListItem 
-                                    key={index}
-                                    sx={{ 
-                                      bgcolor: 'background.paper',
-                                      borderRadius: 1,
-                                      mb: 1,
-                                      border: '1px solid',
-                                      borderColor: 'divider'
-                                    }}
-                                  >
-                                    <ListItemText 
-                                      primary={file.file_name}
-                                      secondary={`${(file.file_data.length / 1024).toFixed(2)} KB`}
-                                    />
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      startIcon={<VisibilityIcon />}
-                                      onClick={() => {
-                                        const fileType = file.file_type || 'application/octet-stream';
-                                        // Convert base64 to blob
-                                        const byteCharacters = atob(file.base64_data);
-                                        const byteNumbers = new Array(byteCharacters.length);
-                                        for (let i = 0; i < byteCharacters.length; i++) {
-                                          byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                        }
-                                        const byteArray = new Uint8Array(byteNumbers);
-                                        const blob = new Blob([byteArray], { type: fileType });
-                                        const fileObj = new File([blob], file.file_name, { type: fileType });
-                                        handlePreviewFile(fileObj);
-                                      }}
-                                      sx={{ mr: 1 }}
-                                    >
-                                      Preview
-                                    </Button>
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      onClick={() => {
-                                        // Convert base64 to blob for download
-                                        const byteCharacters = atob(file.base64_data);
-                                        const byteNumbers = new Array(byteCharacters.length);
-                                        for (let i = 0; i < byteCharacters.length; i++) {
-                                          byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                        }
-                                        const byteArray = new Uint8Array(byteNumbers);
-                                        const blob = new Blob([byteArray], { type: file.file_type });
-                                        const url = URL.createObjectURL(blob);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = file.file_name;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      }}
-                                    >
-                                      Download
-                                    </Button>
-                                  </ListItem>
-                                ))}
-                              </List>
-                            </Box>
-                          )}
+                    </Box>
+                  }
+                  sx={{ 
+                    color: 'success.main',
+                    '&.Mui-selected': {
+                      color: 'success.main',
+                      fontWeight: 'bold',
+                    }
+                  }}
+                />
+                <Tab 
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      Completed
+                      <Chip 
+                        label={groupedAppointments['Completed']?.length || 0} 
+                        size="small" 
+                        color="primary"
+                        sx={{ ml: 1 }}
+                      />
+                    </Box>
+                  }
+                  sx={{ 
+                    color: 'primary.main',
+                    '&.Mui-selected': {
+                      color: 'primary.main',
+                      fontWeight: 'bold',
+                    }
+                  }}
+                />
+                <Tab 
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      Cancelled
+                      <Chip 
+                        label={groupedAppointments['Cancelled']?.length || 0} 
+                        size="small" 
+                        color="error"
+                        sx={{ ml: 1 }}
+                      />
+                    </Box>
+                  }
+                  sx={{ 
+                    color: 'error.main',
+                    '&.Mui-selected': {
+                      color: 'error.main',
+                      fontWeight: 'bold',
+                    }
+                  }}
+                />
+              </Tabs>
 
-                          {appointment.meet_link && (
-                            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Button
-                                variant="contained"
-                                color="primary"
-                                startIcon={<VideocamIcon />}
-                                href={appointment.meet_link}
-                                target="_blank"
-                                size="small"
-                              >
-                                Join Video Consultation
-                              </Button>
+              <Box sx={{ mt: 2 }}>
+                {appointmentStatusTab === 0 && (
+                  <List>
+                    {groupedAppointments['Scheduled']?.map((appointment) => (
+                      <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                        <ListItem>
+                          <ListItemText
+                            primary={
+                              <Typography variant="h6">
+                                {formatAppointmentDateTime(appointment)}
+                              </Typography>
+                            }
+                            secondary={
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                  Dr. {appointment.doctor_name}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <Chip 
+                            label={appointment.status} 
+                            color={getStatusColor(appointment.status)}
+                            sx={{ fontWeight: 'bold', mr: 2 }}
+                          />
+                          <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                            <ExpandMoreIcon sx={{
+                              transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.3s'
+                            }} />
+                          </IconButton>
+                        </ListItem>
+                        
+                        {expandedAppointments.has(appointment.id) && (
+                          <>
+                            <Divider />
+                            <Box sx={{ p: 2 }}>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+                              </Typography>
+                              {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
+                                <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                                  <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
+                                </Typography>
+                              )}
+                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                              </Box>
+                              
+                              {appointment.files && appointment.files.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
+                                    Medical Reports:
+                                  </Typography>
+                                  <List>
+                                    {appointment.files.map((file, index) => (
+                                      <ListItem 
+                                        key={index}
+                                        sx={{ 
+                                          bgcolor: 'background.paper',
+                                          borderRadius: 1,
+                                          mb: 1,
+                                          border: '1px solid',
+                                          borderColor: 'divider'
+                                        }}
+                                      >
+                                        <ListItemText 
+                                          primary={file.file_name}
+                                          secondary={`${(file.file_data.length / 1024).toFixed(2)} KB`}
+                                        />
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          startIcon={<VisibilityIcon />}
+                                          onClick={() => {
+                                            const fileType = file.file_type || 'application/octet-stream';
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: fileType });
+                                            const fileObj = new File([blob], file.file_name, { type: fileType });
+                                            handlePreviewFile(fileObj);
+                                          }}
+                                          sx={{ mr: 1 }}
+                                        >
+                                          Preview
+                                        </Button>
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          onClick={() => {
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: file.file_type });
+                                            const url = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.download = file.file_name;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            URL.revokeObjectURL(url);
+                                          }}
+                                        >
+                                          Download
+                                        </Button>
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                </Box>
+                              )}
+
+                              {appointment.meet_link && (
+                                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<VideocamIcon />}
+                                    href={appointment.meet_link}
+                                    target="_blank"
+                                    size="small"
+                                  >
+                                    Join Video Consultation
+                                  </Button>
+                                </Box>
+                              )}
                             </Box>
-                          )}
-                        </Box>
-                      </>
-                    )}
-                  </Paper>
-                ))}
-              </List>
+                          </>
+                        )}
+                      </Paper>
+                    ))}
+                  </List>
+                )}
+
+                {appointmentStatusTab === 1 && (
+                  <List>
+                    {groupedAppointments['Completed']?.map((appointment) => (
+                      <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                        <ListItem>
+                          <ListItemText
+                            primary={
+                              <Typography variant="h6">
+                                {formatAppointmentDateTime(appointment)}
+                              </Typography>
+                            }
+                            secondary={
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                  Dr. {appointment.doctor_name}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <Chip 
+                            label={appointment.status} 
+                            color={getStatusColor(appointment.status)}
+                            sx={{ fontWeight: 'bold', mr: 2 }}
+                          />
+                          <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                            <ExpandMoreIcon sx={{
+                              transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.3s'
+                            }} />
+                          </IconButton>
+                        </ListItem>
+                        
+                        {expandedAppointments.has(appointment.id) && (
+                          <>
+                            <Divider />
+                            <Box sx={{ p: 2 }}>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+                              </Typography>
+                              {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
+                                <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                                  <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
+                                </Typography>
+                              )}
+                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                              </Box>
+                              
+                              {appointment.files && appointment.files.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
+                                    Medical Reports:
+                                  </Typography>
+                                  <List>
+                                    {appointment.files.map((file, index) => (
+                                      <ListItem 
+                                        key={index}
+                                        sx={{ 
+                                          bgcolor: 'background.paper',
+                                          borderRadius: 1,
+                                          mb: 1,
+                                          border: '1px solid',
+                                          borderColor: 'divider'
+                                        }}
+                                      >
+                                        <ListItemText 
+                                          primary={file.file_name}
+                                          secondary={`${(file.file_data.length / 1024).toFixed(2)} KB`}
+                                        />
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          startIcon={<VisibilityIcon />}
+                                          onClick={() => {
+                                            const fileType = file.file_type || 'application/octet-stream';
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: fileType });
+                                            const fileObj = new File([blob], file.file_name, { type: fileType });
+                                            handlePreviewFile(fileObj);
+                                          }}
+                                          sx={{ mr: 1 }}
+                                        >
+                                          Preview
+                                        </Button>
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          onClick={() => {
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: file.file_type });
+                                            const url = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.download = file.file_name;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            URL.revokeObjectURL(url);
+                                          }}
+                                        >
+                                          Download
+                                        </Button>
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                </Box>
+                              )}
+
+                              {appointment.meet_link && (
+                                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<VideocamIcon />}
+                                    href={appointment.meet_link}
+                                    target="_blank"
+                                    size="small"
+                                  >
+                                    Join Video Consultation
+                                  </Button>
+                                </Box>
+                              )}
+                            </Box>
+                          </>
+                        )}
+                      </Paper>
+                    ))}
+                  </List>
+                )}
+
+                {appointmentStatusTab === 2 && (
+                  <List>
+                    {groupedAppointments['Cancelled']?.map((appointment) => (
+                      <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                        <ListItem>
+                          <ListItemText
+                            primary={
+                              <Typography variant="h6">
+                                {formatAppointmentDateTime(appointment)}
+                              </Typography>
+                            }
+                            secondary={
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                  Dr. {appointment.doctor_name}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <Chip 
+                            label={appointment.status} 
+                            color={getStatusColor(appointment.status)}
+                            sx={{ fontWeight: 'bold', mr: 2 }}
+                          />
+                          <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                            <ExpandMoreIcon sx={{
+                              transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.3s'
+                            }} />
+                          </IconButton>
+                        </ListItem>
+                        
+                        {expandedAppointments.has(appointment.id) && (
+                          <>
+                            <Divider />
+                            <Box sx={{ p: 2 }}>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
+                              </Typography>
+                              {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
+                                <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                                  <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
+                                </Typography>
+                              )}
+                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                              </Box>
+                              
+                              {appointment.files && appointment.files.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
+                                    Medical Reports:
+                                  </Typography>
+                                  <List>
+                                    {appointment.files.map((file, index) => (
+                                      <ListItem 
+                                        key={index}
+                                        sx={{ 
+                                          bgcolor: 'background.paper',
+                                          borderRadius: 1,
+                                          mb: 1,
+                                          border: '1px solid',
+                                          borderColor: 'divider'
+                                        }}
+                                      >
+                                        <ListItemText 
+                                          primary={file.file_name}
+                                          secondary={`${(file.file_data.length / 1024).toFixed(2)} KB`}
+                                        />
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          startIcon={<VisibilityIcon />}
+                                          onClick={() => {
+                                            const fileType = file.file_type || 'application/octet-stream';
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: fileType });
+                                            const fileObj = new File([blob], file.file_name, { type: fileType });
+                                            handlePreviewFile(fileObj);
+                                          }}
+                                          sx={{ mr: 1 }}
+                                        >
+                                          Preview
+                                        </Button>
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          onClick={() => {
+                                            const byteCharacters = atob(file.base64_data);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: file.file_type });
+                                            const url = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.download = file.file_name;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            URL.revokeObjectURL(url);
+                                          }}
+                                        >
+                                          Download
+                                        </Button>
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                </Box>
+                              )}
+
+                              {appointment.meet_link && (
+                                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<VideocamIcon />}
+                                    href={appointment.meet_link}
+                                    target="_blank"
+                                    size="small"
+                                  >
+                                    Join Video Consultation
+                                  </Button>
+                                </Box>
+                              )}
+                            </Box>
+                          </>
+                        )}
+                      </Paper>
+                    ))}
+                  </List>
+                )}
+              </Box>
             </Box>
           )}
         </Paper>

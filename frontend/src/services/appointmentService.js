@@ -99,14 +99,18 @@ export const appointmentService = {
     }
   },
 
-  async cancelAppointment(appointmentId) {
+  async cancelAppointment(appointmentId, cancellationReason) {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/doctor/appointments/${appointmentId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          cancellation_reason: cancellationReason
+        })
       });
       if (!response.ok) {
         const errorData = await response.json();
