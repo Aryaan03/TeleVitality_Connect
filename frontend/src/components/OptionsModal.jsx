@@ -1,48 +1,124 @@
 import React from 'react';
-import { Box, Button, Typography, Modal, Stack } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { 
+  Box, 
+  Button, 
+  Typography, 
+  Modal, 
+  IconButton 
+} from '@mui/material';
+import { Close, Person, MedicalServices } from '@mui/icons-material';
 
-const style = {
+const modalStyle = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: { xs: '90%', sm: 450 },
   bgcolor: 'background.paper',
+  borderRadius: '16px',
   boxShadow: 24,
   p: 4,
-  borderRadius: 2,
+  outline: 'none',
+};
+
+const buttonStyle = {
+  py: 3,
+  fontSize: '1.1rem',
+  fontWeight: 600,
+  textTransform: 'none',
+  borderRadius: '12px',
+  width: '100%',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: 3,
+  }
 };
 
 export default function OptionsModal({ open, handleClose, action, openPatientDialogue, openDoctorDialogue }) {
-  const navigate = useNavigate();
 
   const handleDoctor = () => {
     handleClose();
-    openDoctorDialogue(); // Open Doctor Registration Modal
-    // navigate('/doctor-register'); // Navigate to Doctor Registration Page
+    openDoctorDialogue();
   };
 
   const handlePatient = () => {
     handleClose();
-    openPatientDialogue(); // Open Patient Registration Modal
-    // navigate('/register'); // Navigate to Patient Registration Page
+    openPatientDialogue();
   };
 
   return (
-    <Modal open={open} onClose={handleClose}>
-      <Box sx={style}>
-        <Typography variant="h6" component="h2" sx={{ textAlign: 'center', mb: 3 }}>
-           {action} As
+    <Modal 
+      open={open} 
+      onClose={handleClose}
+      BackdropProps={{ style: { backdropFilter: 'blur(4px)' }}}
+    >
+      <Box sx={modalStyle}>
+        <IconButton 
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 16,
+            top: 16,
+            color: 'text.secondary'
+          }}
+        >
+          <Close />
+        </IconButton>
+
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            textAlign: 'center',
+            mb: 3,
+            fontWeight: 700,
+            color: 'text.primary',
+          }}
+        >
+          {action}
+          <Box sx={{ 
+            height: '4px',
+            width: '60px',
+            bgcolor: 'primary.main',
+            mx: 'auto',
+            mt: 1,
+            borderRadius: '2px'
+          }} />
         </Typography>
-        <Stack spacing={2}>
-          <Button variant="contained" onClick={handleDoctor}>
-            {action} as Doctor
-          </Button>
-          <Button variant="contained" onClick={handlePatient}>
-            {action} as Patient
-          </Button>
-        </Stack>
+
+        <Button
+          variant="contained"
+          onClick={handlePatient}
+          startIcon={<Person sx={{ fontSize: 28 }} />}
+          sx={{
+            ...buttonStyle,
+            bgcolor: 'primary.main',
+            '&:hover': { bgcolor: 'primary.dark' }
+          }}
+        >
+          Patient {action}
+        </Button>
+
+        <Typography 
+          variant="body1" 
+          sx={{
+            textAlign: 'center',
+            mt: 3,
+            color: 'text.secondary',
+            '& span': {
+              color: 'primary.main',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              '&:hover': {
+                textDecoration: 'none'
+              }
+            }
+          }}
+        >
+          Are you a healthcare provider? <span onClick={handleDoctor}>{action} here</span>
+        </Typography>
+        
       </Box>
     </Modal>
   );
