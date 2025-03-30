@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -139,13 +140,16 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
+		// Generate a unique meet link
+		meetLink := generateMeetLink()
+
 		// Insert into the database
 		var appointmentID int
 		err = h.DB.QueryRow(`
-            INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO appointments (patient_id, doctor_id, appointment_time, problem_description, status, meet_link)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id`,
-			int(patientID), doctorID, appointmentTimeJSON, problemDesc).Scan(&appointmentID)
+			int(patientID), doctorID, appointmentTimeJSON, problemDesc, "Scheduled", meetLink).Scan(&appointmentID)
 		if err != nil {
 			log.Println("Error executing SQL query:", err)
 			http.Error(w, `{"error": "Failed to book appointment"}`, http.StatusInternalServerError)
@@ -189,6 +193,20 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// Helper function to generate a unique meet link
+func generateMeetLink() string {
+	// Generate a random room name (e.g., "happy-cat-123")
+	adjectives := []string{"happy", "sunny", "quick", "lucky", "funny", "brave"}
+	nouns := []string{"cat", "dog", "fox", "lion", "tiger", "panda"}
+
+	randomAdj := adjectives[rand.Intn(len(adjectives))]
+	randomNoun := nouns[rand.Intn(len(nouns))]
+	randomNum := rand.Intn(1000)
+
+	roomName := fmt.Sprintf("%s-%s-%d", randomAdj, randomNoun, randomNum)
+	return fmt.Sprintf("https://meet.jit.si/%s", roomName)
+}
+
 func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *http.Request) {
 	// JWT validation and token parsing
 	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
@@ -219,7 +237,8 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
                 d.first_name, 
                 d.last_name,
                 af.file_name,
-                af.file_data
+                af.file_data,
+                a.meet_link
             FROM appointments a
             JOIN doctor_profiles d ON a.doctor_id = d.user_id
             LEFT JOIN appointment_files af ON a.id = af.appointment_id
@@ -238,6 +257,7 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 			var doctorFirstName, doctorLastName string
 			var appointmentTimeJSON []byte
 			var fileName, fileData []byte
+			var meetLink sql.NullString
 
 			if err := rows.Scan(
 				&app.ID,
@@ -250,6 +270,7 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 				&doctorLastName,
 				&fileName,
 				&fileData,
+				&meetLink,
 			); err != nil {
 				log.Println("Error scanning appointment history:", err)
 				http.Error(w, `{"error": "Failed to scan appointment history"}`, http.StatusInternalServerError)
@@ -265,6 +286,9 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 
 			// Construct the doctor's name
 			app.DoctorName = fmt.Sprintf("%s %s", doctorFirstName, doctorLastName)
+
+			// Set the MeetLink from the NullString
+			app.MeetLink = meetLink.String
 
 			// Add file data if available
 			if fileName != nil && fileData != nil {
@@ -313,6 +337,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				a.problem_description, 
 				a.status,
 				a.notes,
+				a.meet_link,
 				p.first_name,
 				p.last_name
 			FROM appointments a
@@ -333,6 +358,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				id, patientID, docID              int
 				problemDesc, status               string
 				notes                             sql.NullString
+				meetLink                          sql.NullString
 				patientFirstName, patientLastName string
 				appointmentTimeJSON               []byte
 			)
@@ -345,6 +371,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				&problemDesc,
 				&status,
 				&notes,
+				&meetLink,
 				&patientFirstName,
 				&patientLastName,
 			); err != nil {
@@ -373,6 +400,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				"problem_description": problemDesc,
 				"status":              status,
 				"notes":               notes.String,
+				"meet_link":           meetLink.String,
 			}
 
 			appointments = append(appointments, appointment)

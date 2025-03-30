@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Divider, Button, TextField } from '@mui/material';
-import { Cancel as CancelIcon } from '@mui/icons-material';
+import { Cancel as CancelIcon, Videocam as VideocamIcon } from '@mui/icons-material';
 import { authService } from '../services/api';
 import { appointmentService } from '../services/appointmentService';
 
@@ -128,6 +128,19 @@ export default function DoctorAppointmentsPage() {
                     <Typography component="span" variant="body2" display="block">
                       Status: {appointment.status || 'Scheduled'}
                     </Typography>
+                    {appointment.meet_link && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<VideocamIcon />}
+                        href={appointment.meet_link}
+                        target="_blank"
+                        size="small"
+                        sx={{ mt: 1 }}
+                      >
+                        Join Video Consultation
+                      </Button>
+                    )}
                   </>
                 }
               />

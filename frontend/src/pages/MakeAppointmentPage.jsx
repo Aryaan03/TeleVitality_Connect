@@ -28,7 +28,8 @@ import {
   History as HistoryIcon,
   AttachFile as AttachFileIcon,
   ExpandMore as ExpandMoreIcon,
-  MedicalServices as MedicalServicesIcon
+  MedicalServices as MedicalServicesIcon,
+  Videocam as VideocamIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { appointmentService } from '../services/appointmentService';
@@ -645,28 +646,18 @@ export default function AppointmentsPage() {
                           <Typography variant="body2" sx={{ mb: 1 }}>
                             <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                           </Typography>
-
-                          {appointment.files && appointment.files.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                                Uploaded Files:
-                              </Typography>
-                              <List>
-                                {appointment.files.map((file, index) => (
-                                  <ListItem key={index}>
-                                    <ListItemText
-                                      primary={file.file_name}
-                                    />
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      onClick={() => handleDownloadFile(file.file_name, file.file_data)}
-                                    >
-                                      Download
-                                    </Button>
-                                  </ListItem>
-                                ))}
-                              </List>
+                          {appointment.meet_link && (
+                            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<VideocamIcon />}
+                                href={appointment.meet_link}
+                                target="_blank"
+                                size="small"
+                              >
+                                Join Video Consultation
+                              </Button>
                             </Box>
                           )}
                         </Box>
