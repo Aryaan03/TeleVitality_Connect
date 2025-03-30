@@ -130,4 +130,23 @@ export const appointmentService = {
     }
   },
 
+  async updateAppointmentNotes(appointmentId, notes) {
+    try {
+      
+      const response = await fetch(`${API_URL}/appointment/${appointmentId}/notes`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update notes');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
 };

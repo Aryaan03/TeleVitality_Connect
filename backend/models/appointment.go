@@ -14,6 +14,8 @@ type Appointment struct {
 	Status             string            `json:"status"`
 	DoctorName         string            `json:"doctor_name"`
 	Files              []AppointmentFile `json:"files"`
+	Notes              string            `json:"notes"`
+	MeetLink           string            `json:"meet_link"`
 }
 
 type AppointmentFile struct {
