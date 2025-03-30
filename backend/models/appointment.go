@@ -19,6 +19,8 @@ type Appointment struct {
 }
 
 type AppointmentFile struct {
-	FileName string `json:"file_name"`
-	FileData []byte `json:"file_data"`
+	FileName   string `json:"file_name"`
+	FileData   []byte `json:"file_data"`
+	FileType   string `json:"file_type"`
+	Base64Data string `json:"base64_data"`
 }

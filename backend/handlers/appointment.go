@@ -3,12 +3,14 @@ package handlers
 import (
 	"backend/models"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -292,9 +294,28 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 
 			// Add file data if available
 			if fileName != nil && fileData != nil {
+				// Determine file type from extension
+				fileType := "application/octet-stream"
+				ext := strings.ToLower(filepath.Ext(string(fileName)))
+				switch ext {
+				case ".pdf":
+					fileType = "application/pdf"
+				case ".jpg", ".jpeg":
+					fileType = "image/jpeg"
+				case ".png":
+					fileType = "image/png"
+				case ".txt":
+					fileType = "text/plain"
+				}
+
+				// Encode file data to base64
+				base64Data := base64.StdEncoding.EncodeToString(fileData)
+
 				app.Files = append(app.Files, models.AppointmentFile{
-					FileName: string(fileName),
-					FileData: fileData,
+					FileName:   string(fileName),
+					FileData:   fileData,
+					FileType:   fileType,
+					Base64Data: base64Data,
 				})
 			}
 

@@ -853,29 +853,16 @@ export default function AppointmentsPage() {
                                       size="small"
                                       startIcon={<VisibilityIcon />}
                                       onClick={() => {
-                                        const fileType = file.file_name.split('.').pop().toLowerCase();
-                                        let mimeType = 'application/octet-stream';
-                                        
-                                        switch (fileType) {
-                                          case 'pdf':
-                                            mimeType = 'application/pdf';
-                                            break;
-                                          case 'jpg':
-                                          case 'jpeg':
-                                            mimeType = 'image/jpeg';
-                                            break;
-                                          case 'png':
-                                            mimeType = 'image/png';
-                                            break;
-                                          case 'txt':
-                                            mimeType = 'text/plain';
-                                            break;
-                                          default:
-                                            mimeType = 'application/octet-stream';
+                                        const fileType = file.file_type || 'application/octet-stream';
+                                        // Convert base64 to blob
+                                        const byteCharacters = atob(file.base64_data);
+                                        const byteNumbers = new Array(byteCharacters.length);
+                                        for (let i = 0; i < byteCharacters.length; i++) {
+                                          byteNumbers[i] = byteCharacters.charCodeAt(i);
                                         }
-
-                                        const blob = new Blob([file.file_data], { type: mimeType });
-                                        const fileObj = new File([blob], file.file_name, { type: mimeType });
+                                        const byteArray = new Uint8Array(byteNumbers);
+                                        const blob = new Blob([byteArray], { type: fileType });
+                                        const fileObj = new File([blob], file.file_name, { type: fileType });
                                         handlePreviewFile(fileObj);
                                       }}
                                       sx={{ mr: 1 }}
@@ -885,7 +872,24 @@ export default function AppointmentsPage() {
                                     <Button
                                       variant="outlined"
                                       size="small"
-                                      onClick={() => handleDownloadFile(file.file_name, file.file_data)}
+                                      onClick={() => {
+                                        // Convert base64 to blob for download
+                                        const byteCharacters = atob(file.base64_data);
+                                        const byteNumbers = new Array(byteCharacters.length);
+                                        for (let i = 0; i < byteCharacters.length; i++) {
+                                          byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                        }
+                                        const byteArray = new Uint8Array(byteNumbers);
+                                        const blob = new Blob([byteArray], { type: file.file_type });
+                                        const url = URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = file.file_name;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }}
                                     >
                                       Download
                                     </Button>
