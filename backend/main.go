@@ -45,6 +45,10 @@ func main() {
 	protectedDoctor.Handle("/appointments", http.HandlerFunc(appointmentHandler.GetDoctorAppointments)).Methods("GET")
 	protectedDoctor.Handle("/appointments/{id}", http.HandlerFunc(appointmentHandler.CancelAppointment)).Methods("DELETE")
 
+	// Protected Appointment Routes (for both doctors and patients)
+	r.Handle("/api/appointments/upcoming", handlers.JWTAuthMiddleware("doctor", "patient")(http.HandlerFunc(appointmentHandler.GetUpcomingAppointments))).Methods("GET")
+	r.Handle("/api/appointments/history", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.GetAppointmentHistory))).Methods("GET")
+
 	// Appointment Routes
 	r.HandleFunc("/api/specialties", appointmentHandler.GetSpecialties).Methods("GET")
 	r.HandleFunc("/api/doctors", appointmentHandler.GetDoctorsBySpecialty).Methods("GET")
@@ -54,9 +58,6 @@ func main() {
 
 	// Use r.Handle for routes with middleware
 	r.Handle("/api/appointments", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.BookAppointment))).Methods("POST")
-
-	// Add the /api/appointments/history route
-	r.Handle("/api/appointments/history", handlers.JWTAuthMiddleware("patient")(http.HandlerFunc(appointmentHandler.GetAppointmentHistory))).Methods("GET")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

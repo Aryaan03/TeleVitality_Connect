@@ -666,3 +666,78 @@ func (h *AppointmentHandler) UpdateAppointmentNotes(w http.ResponseWriter, r *ht
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Notes updated successfully"})
 }
+
+func (h *AppointmentHandler) GetUpcomingAppointments(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT token
+	authHeader := r.Header.Get("Authorization")
+	log.Printf("Received Authorization header: %s", authHeader)
+
+	if authHeader == "" {
+		log.Println("No Authorization header found")
+		http.Error(w, `{"error": "No authorization token provided"}`, http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := strings.Split(authHeader, " ")[1]
+	log.Printf("Extracted token: %s...", tokenString[:10])
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		log.Printf("Error parsing token: %v", err)
+		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID := claims["user_id"].(float64)
+		role := claims["role"].(string)
+		log.Printf("User ID: %v, Role: %s", userID, role)
+
+		var query string
+		var args []interface{}
+
+		if role == "doctor" {
+			query = `
+				SELECT COUNT(*)
+				FROM appointments
+				WHERE doctor_id = $1
+				AND status = 'Scheduled'
+				AND (appointment_time->>'date')::date >= CURRENT_DATE
+				AND (appointment_time->>'date')::date <= CURRENT_DATE + INTERVAL '7 days'
+			`
+			args = []interface{}{int(userID)}
+		} else {
+			query = `
+				SELECT COUNT(*)
+				FROM appointments
+				WHERE patient_id = $1
+				AND status = 'Scheduled'
+				AND (appointment_time->>'date')::date >= CURRENT_DATE
+				AND (appointment_time->>'date')::date <= CURRENT_DATE + INTERVAL '7 days'
+			`
+			args = []interface{}{int(userID)}
+		}
+
+		log.Printf("Executing query: %s with args: %v", query, args)
+
+		var count int
+		err := h.DB.QueryRow(query, args...).Scan(&count)
+		if err != nil {
+			log.Printf("Error querying upcoming appointments: %v", err)
+			http.Error(w, `{"error": "Failed to fetch upcoming appointments"}`, http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("Found %d upcoming appointments", count)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]int{"count": count})
+	} else {
+		log.Println("Invalid token claims")
+		http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+	}
+}
