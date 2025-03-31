@@ -268,11 +268,110 @@ To run the unit tests, follow these steps:
 
 We've implemented comprehensive unit tests for critical authentication components using React Testing Library. These tests validate component rendering, user interactions, and form validation.
 
-#### Tested Components:
-1. **Login Page**
-2. **Patient Registration Page**
+## Test Framework Used
+React Testing Library for unit testing.
 
----
+Jest as the test runner and assertion library.
+
+#### Tested Components:
+1. Login Page (LoginPage.test.js)
+Verifies presence of modal and login form fields.
+
+Simulates valid and invalid login attempts.
+
+Tests behavior on form submission, including error handling.
+
+Checks form validation rules using Yup.
+
+2. Patient Registration Page (RegisterPage.test.js)
+Tests rendering of form fields and sections.
+
+Validates error messages for:
+
+Empty fields
+
+Password mismatch
+
+Unchecked Terms & Conditions
+
+Simulates successful form submission and field interaction.
+
+3. Doctor Registration Page (DoctorRegisterPage.test.js)
+Tests input rendering and structure.
+
+Validates required fields and email/password format.
+
+Checks role-based navigation after submission.
+
+4. Doctor Login Page (DoctorLoginPage.test.js)
+Verifies field rendering and submission behavior.
+
+Tests both success and failure scenarios for authentication.
+
+Simulates redirect to doctor dashboard upon successful login.
+
+5. Home Page (HomePage.test.js)
+Validates presence of hero section, navigation, and pricing components.
+
+Tests rendering of testimonials, CTA, and footer links.
+
+6. Appointments Page (AppointmentsPage.test.js)
+Mocks API calls and tests the following:
+
+Appointment list rendering
+
+File upload interactions
+
+Appointment cancellation logic
+
+Notes section updates
+
+Handles edge cases such as missing data and error states.
+
+7. Doctor Appointments Page (DoctorAppointmentsPage.test.js)
+Verifies doctor-specific appointment rendering.
+
+Simulates file previews, cancellation with reasons, and notes submission.
+
+Tests conditional rendering and loading indicators.
+
+8. Profile Page (ProfilePage.test.js)
+Validates personal, medical, and insurance detail forms.
+
+Tests edit and save toggles.
+
+Ensures data consistency across state changes.
+
+9. Contact Page (ContactPage.test.js)
+Tests visibility of contact form fields and location data.
+
+Validates form submission and error handling logic.
+
+10. Forgot Password Page (ForgotPasswordPage.test.js)
+Validates password reset flow.
+
+Verifies password strength requirements.
+
+Simulates user feedback via alerts or messages.
+
+## Mocking & Utilities
+External API calls (e.g., authService, appointmentService, profileService) were mocked using jest.mock() to isolate frontend logic.
+
+Navigation (react-router-dom) and form submission handlers were mocked for complete unit test simulation.
+----
+
+## Test Coverage
+All tests were written to ensure coverage of:
+
+User input
+
+Validation messages
+
+API integration points
+
+Conditional rendering
+
+Navigation flow
 
 ### **How to Run Frontend Unit Tests**
 
@@ -283,5 +382,16 @@ We've implemented comprehensive unit tests for critical authentication component
 2. **Run all tests**:<br>
    ```bash
    npm test -- --WatchAll=false
+   
+   
+## Key Outcomes
+Achieved full unit test coverage across the frontend components introduced or updated in this sprint.
+
+Ensured all pages provide appropriate validation, visual feedback, and maintain consistency under different user scenarios.
+
+Strengthened frontend reliability ahead of future feature enhancements or deployment.
+
+
+
 
 
