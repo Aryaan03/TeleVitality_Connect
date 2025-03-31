@@ -269,6 +269,7 @@ export default function RegisterPage({ open, handleClose, openLogin }) {
                     },
                     transition: 'all 0.2s ease'
                   }}
+                  data-testid="submit-button"
                 >
                   {isSubmitting ? (
                     <CircularProgress size={24} sx={{ color: 'white' }} />

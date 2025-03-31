@@ -44,7 +44,7 @@ export default function DoctorRegisterPage({ open, handleClose, openLogin }) {
           right: 0,
           top: 0
         }}>
-          <IconButton onClick={handleClose} size="small">
+          <IconButton onClick={handleClose} size="small" id='close-modal-button' data-testid="close-modal-button">
             <Close sx={{ color: 'text.secondary' }} />
           </IconButton>
         </Box>
@@ -269,6 +269,7 @@ export default function DoctorRegisterPage({ open, handleClose, openLogin }) {
                     },
                     transition: 'all 0.2s ease'
                   }}
+                  data-testid="submit-button"
                 >
                   {isSubmitting ? (
                     <CircularProgress size={24} sx={{ color: 'white' }} />

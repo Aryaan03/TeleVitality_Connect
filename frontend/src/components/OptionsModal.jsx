@@ -96,6 +96,7 @@ export default function OptionsModal({ open, handleClose, action, openPatientDia
             bgcolor: 'primary.main',
             '&:hover': { bgcolor: 'primary.dark' }
           }}
+          data-testid="patient-button"
         >
           Patient {action}
         </Button>
@@ -116,7 +117,7 @@ export default function OptionsModal({ open, handleClose, action, openPatientDia
             }
           }}
         >
-          Are you a healthcare provider? <span onClick={handleDoctor}>{action} here</span>
+          Are you a healthcare provider? <span onClick={handleDoctor} data-testid="doctor-button">{action} here</span>
         </Typography>
         
       </Box>

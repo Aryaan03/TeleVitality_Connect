@@ -326,6 +326,8 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
                   
                   <Button
                     variant="contained"
+                    id='register-button'
+                    data-testid='register-button'
                     onClick={onRegisterClick}
                     sx={{
                       px: 3,
