@@ -268,114 +268,107 @@ To run the unit tests, follow these steps:
 
 ---
 
-### **Unit Tests (Frontend)**
+# Frontend Unit Testing
 
-We've implemented comprehensive unit tests for critical authentication components using React Testing Library. These tests validate component rendering, user interactions, and form validation.
+## Unit Tests Implementation
+During Sprint 3, we implemented comprehensive unit tests for critical authentication components and key pages in the application using **React Testing Library** and **Jest**. These tests validate component rendering, user interactions, form validation, API integration, and navigation behavior.
 
 ## Test Framework Used
+- **React Testing Library**: For unit testing React components.
+- **Jest**: Used as the test runner and assertion library.
+- **Mocking**:
+  - Navigation (react-router-dom) and form submission handlers were mocked.
+  - External API calls (e.g., `authService`, `appointmentService`, `profileService`) were isolated using `jest.mock()`.
 
-React Testing Library for unit testing.
-Jest as the test runner and assertion library.
-Navigation (react-router-dom) and form submission handlers were mocked for complete unit test simulation.
+## Tested Components
+### Authentication Pages
+#### **Patient Login Page (`LoginPage.test.jsx`)**
+- Verifies the presence of the login form and modal.
+- Simulates valid and invalid login attempts.
+- Tests form validation rules using **Yup**.
+- Handles error scenarios and form submission behavior.
 
-#### Tested Components:
+#### **Patient Registration Page (`RegisterPage.test.jsx`)**
+- Ensures proper rendering of form fields and sections.
+- Validates error messages for:
+  - Empty fields
+  - Password mismatch
+  - Unchecked Terms & Conditions
+- Simulates successful form submission and field interaction.
 
-1. Patient Login Page (LoginPage.test.jsx)
+#### **Doctor Registration Page (`DoctorRegisterPage.test.jsx`)**
+- Ensures correct rendering of input fields.
+- Validates required fields and email/password format.
+- Tests role-based navigation upon form submission.
 
-Verifies presence of modal and login form fields.
-Simulates valid and invalid login attempts.
-Tests behavior on form submission, including error handling.
-Checks form validation rules using Yup.
+#### **Doctor Login Page (`DoctorLoginPage.test.jsx`)**
+- Verifies field rendering and submission behavior.
+- Tests both success and failure authentication scenarios.
+- Simulates redirection to the **doctor dashboard** upon successful login.
 
-2. Patient Registration Page (RegisterPage.test.jsx)
-   
-Tests rendering of form fields and sections.
-Validates error messages for:
-Empty fields
-Password mismatch
-Unchecked Terms & Conditions
-Simulates successful form submission and field interaction.
+### Appointment Management
+#### **Make Appointments Page (`MakeAppointmentsPage.test.jsx`)**
+- Mocks API calls for:
+  - Appointment list rendering.
+  - File upload interactions.
+  - Appointment cancellation logic.
+  - Notes section updates.
+- Handles edge cases like missing data and error states.
 
-3. Doctor Registration Page (DoctorRegisterPage.test.jsx)
-   
-Tests input rendering and structure.
-Validates required fields and email/password format.
-Checks role-based navigation after submission.
+#### **Doctor Appointments Page (`DoctorAppointmentsPage.test.jsx`)**
+- Ensures doctor-specific appointment rendering.
+- Simulates:
+  - File previews.
+  - Appointment cancellations with reasons.
+  - Notes submission.
+- Tests conditional rendering and loading indicators.
 
-4. Doctor Login Page (DoctorLoginPage.test.jsx)
-   
-Verifies field rendering and submission behavior.
-Tests both success and failure scenarios for authentication.
-Simulates redirect to doctor dashboard upon successful login.
+### Profile & Support Pages
+#### **Profile Display Page (`ProfileDisplay.test.jsx`)**
+- Validates personal, medical, and insurance detail forms.
+- Tests edit and save functionality.
+- Ensures data consistency across state changes.
 
-5. Make Appointments Page for patients (MakeAppointmentsPage.test.jsx)
-   
-Mocks API calls and tests the following:
-Appointment list rendering
-File upload interactions
-Appointment cancellation logic
-Notes section updates
-Handles edge cases such as missing data and error states.
+#### **Contact Page (`ContactPage.test.jsx`)**
+- Ensures visibility of contact form fields and location data.
+- Validates form submission and error handling logic.
 
-6. Doctor Appointments Page (DoctorAppointmentsPage.test.jsx)
-   
-Verifies doctor-specific appointment rendering.
-Simulates file previews, cancellation with reasons, and notes submission.
-Tests conditional rendering and loading indicators.
+#### **Forgot Password Page (`ForgotPasswordPage.test.jsx`)**
+- Verifies the password reset flow.
+- Ensures password strength requirements are met.
+- Simulates user feedback via alerts or messages.
 
-7. Profile Display Page (ProfileDisplay.test.jsx)
-   
-Validates personal, medical, and insurance detail forms.
-Tests edit and save toggles.
-Ensures data consistency across state changes.
+### Dashboard
+#### **Dashboard Page (`Dashboard.test.jsx`)**
+- Ensures correct rendering of static content.
+- Mocks API calls and tests unauthorized access behavior.
+- Validates error messages when unauthorized.
 
-8. Contact Page (ContactPage.test.jsx)
-   
-Tests visibility of contact form fields and location data.
-Validates form submission and error handling logic.
+## Test Coverage & Execution
+**Coverage Focus:**
+- User input validation
+- Form validation messages
+- API integration points
+- Conditional rendering
+- Navigation flow
 
-9. Forgot Password Page (ForgotPasswordPage.test.jsx)
-    
-Validates password reset flow.
-Verifies password strength requirements.
-Simulates user feedback via alerts or messages.
-
-10. Dashboard Page (Dashboard.test.jsx)
-
-Verifies if it renders static content correctly.
-mock api calls and checks if it navigates and display error message if unauthorised.
-
-## Mocking & Utilities
-
-External API calls (e.g., authService, appointmentService, profileService) were mocked using jest.mock() to isolate frontend logic.
-
-----
-
-## Test Coverage
-
-All tests were written to ensure coverage of:
-User input
-Validation messages
-API integration points
-Conditional rendering
-Navigation flow
-
-### **How to Run Frontend Unit Tests**
-
-1. **Install dependencies** (if not already installed):<br>
-   ```bash
+### How to Run Frontend Unit Tests
+1. Install dependencies (if not already installed):
+   ```sh
    npm install
-   
-2. **Run all tests**:<br>
-   ```bash
-   npm test -- --WatchAll=false
-   
-   
-## Key Outcomes
+   ```
+2. Run all tests:
+   ```sh
+   npm test -- --watchAll=false
+   ```
 
-Achieved full unit test coverage across the frontend components introduced or updated in this sprint.
-Ensured all pages provide appropriate validation, visual feedback, and maintain consistency under different user scenarios.
-Strengthened frontend reliability ahead of future feature enhancements or deployment.
+## Key Outcomes
+- Achieved **full unit test coverage** across the newly introduced or updated frontend components in this sprint.
+- Ensured all pages provide appropriate validation, visual feedback, and maintain consistency under different user scenarios.
+- Strengthened frontend reliability ahead of future feature enhancements or deployment.
+
+This rigorous testing ensures that our frontend is **robust, maintainable, and ready for production**.
+
 
 
 
