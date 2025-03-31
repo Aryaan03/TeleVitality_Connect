@@ -248,7 +248,7 @@ func TestGetDoctorAppointments(t *testing.T) {
 		WithArgs(2).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Mock the SELECT query with all 12 columns
+	// 2. Mock the SELECT query with all 14 columns
 	mock.ExpectQuery(`SELECT (.+) FROM appointments`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{
@@ -264,6 +264,8 @@ func TestGetDoctorAppointments(t *testing.T) {
 			"last_name",
 			"file_name",
 			"file_data",
+			"doctor_first_name",
+			"doctor_last_name",
 		}).AddRow(
 			1, // id
 			1, // patient_id
@@ -277,6 +279,8 @@ func TestGetDoctorAppointments(t *testing.T) {
 			"Smith",          // last_name
 			nil,              // file_name (NULL)
 			nil,              // file_data (NULL)
+			"John",           // doctor_first_name
+			"Doe",            // doctor_last_name
 		))
 
 	handler.GetDoctorAppointments(w, req)
@@ -705,19 +709,19 @@ func TestGetAppointmentHistory_DatabaseError(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
 
-	// 1. Mock the UPDATE query
+	// 1. Mock the UPDATE query with correct JSON operator syntax
 	mock.ExpectExec(regexp.QuoteMeta(`
         UPDATE appointments 
         SET status = 'Completed' 
         WHERE patient_id = $1 
         AND status = 'Scheduled' 
-        AND appointment_time::date < CURRENT_DATE
-        OR (appointment_time::date = CURRENT_DATE AND appointment_time::time < CURRENT_TIME)
+        AND (appointment_time->>'date')::date < CURRENT_DATE
+        OR ((appointment_time->>'date')::date = CURRENT_DATE AND (appointment_time->>'time')::time < CURRENT_TIME)
     `)).
 		WithArgs(userID).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Correct the SELECT mock to match actual query
+	// 2. Mock the SELECT query with correct JSON operator syntax
 	mock.ExpectQuery(regexp.QuoteMeta(`
         SELECT 
             a.id, 
@@ -774,7 +778,7 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
 
-	// 1. Mock the UPDATE query
+	// 1. Mock the UPDATE query with correct JSON operator syntax
 	mock.ExpectExec(regexp.QuoteMeta(`
         UPDATE appointments 
         SET status = 'Completed' 
@@ -786,7 +790,7 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
 		WithArgs(doctorID).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Mock the SELECT query with exact structure
+	// 2. Mock the SELECT query with correct structure including doctor profile join
 	mock.ExpectQuery(regexp.QuoteMeta(`
         SELECT 
             a.id, 
@@ -800,9 +804,12 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
             p.first_name,
             p.last_name,
             af.file_name,
-            af.file_data
+            af.file_data,
+            d.first_name as doctor_first_name,
+            d.last_name as doctor_last_name
         FROM appointments a
         JOIN profiles p ON a.patient_id = p.user_id
+        JOIN doctor_profiles d ON a.doctor_id = d.user_id
         LEFT JOIN appointment_files af ON a.id = af.appointment_id
         WHERE a.doctor_id = $1
         ORDER BY 
