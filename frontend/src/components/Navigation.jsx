@@ -8,7 +8,7 @@ import {
 import { 
   MedicalServices, Home, Person, CalendarToday, Logout, 
   Login, HowToReg, ContactMail, Menu as MenuIcon, 
-  Notifications, Search, SettingsInputAntenna
+  Notifications, Search
 } from '@mui/icons-material';
 
 const LogoContainer = styled(Box)(({ theme }) => ({
@@ -19,6 +19,11 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   position: 'relative',
   overflow: 'hidden',
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.02)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+  },
   '&:before': {
     content: '""',
     position: 'absolute',
@@ -100,15 +105,8 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
                   fontSize: 28, 
                   color: 'white',
                   mr: 1,
-                  zIndex: 1
-                }} />
-                <SettingsInputAntenna sx={{
-                  position: 'absolute',
-                  bottom: 4,
-                  right: 4,
-                  fontSize: 14,
-                  color: 'white',
-                  zIndex: 1
+                  zIndex: 1,
+                  filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.2))'
                 }} />
                 <LogoText variant="h6">
                   TeleVitality
@@ -123,22 +121,24 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
               gap: 2,
               alignItems: 'center'
             }}>
-              <Button
-                component={Link}
-                to="/"
-                sx={{
-                  color: 'text.primary',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  px: 2,
-                  '&:hover': {
-                    color: 'primary.main',
-                    backgroundColor: 'rgba(20, 126, 255, 0.05)'
-                  }
-                }}
-              >
-                Home
-              </Button>
+              {!isLoggedIn && (
+                <Button
+                  component={Link}
+                  to="/"
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    px: 2,
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                    }
+                  }}
+                >
+                  Home
+                </Button>
+              )}
               
               {isLoggedIn && (
                 <Button
@@ -307,13 +307,15 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
           }
         }}
       >
-        <MenuItem 
-          component={Link} 
-          to="/" 
-          onClick={handleMobileMenuClose}
-        >
-          <Home sx={{ mr: 1.5 }} /> Home
-        </MenuItem>
+        {!isLoggedIn && (
+          <MenuItem 
+            component={Link} 
+            to="/" 
+            onClick={handleMobileMenuClose}
+          >
+            <Home sx={{ mr: 1.5 }} /> Home
+          </MenuItem>
+        )}
         
         {isLoggedIn && (
           <MenuItem 
