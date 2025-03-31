@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { 
   AppBar, Toolbar, Container, Button, Box, Typography, 
   IconButton, Menu, MenuItem, Avatar, Badge, Stack,
-  styled
+  styled, List, ListItem, ListItemText, Divider
 } from '@mui/material';
 import { 
   MedicalServices, Home, Person, CalendarToday, Logout, 
   Login, HowToReg, ContactMail, Menu as MenuIcon, 
   Notifications, Search
 } from '@mui/icons-material';
+import { appointmentService } from '../services/appointmentService';
 
 const LogoContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -45,12 +47,70 @@ const LogoText = styled(Typography)({
   WebkitTextFillColor: 'transparent'
 });
 
+Navigation.propTypes = {
+  onLoginClick: PropTypes.func.isRequired,
+  onRegisterClick: PropTypes.func.isRequired
+};
+
 export default function Navigation({ onLoginClick, onRegisterClick }) {
   const isLoggedIn = !!localStorage.getItem('token');
   const role = localStorage.getItem('role');
   const navigate = useNavigate();
   const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
   const [profileMenuAnchor, setProfileMenuAnchor] = React.useState(null);
+  const [notificationMenuAnchor, setNotificationMenuAnchor] = React.useState(null);
+  const [upcomingAppointmentsCount, setUpcomingAppointmentsCount] = useState(0);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+
+  useEffect(() => {
+    const fetchUpcomingAppointments = async () => {
+      if (isLoggedIn) {
+        try {
+          console.log('Fetching upcoming appointments in Navigation component...');
+          const count = await appointmentService.getUpcomingAppointmentsCount();
+          console.log('Setting upcoming appointments count to:', count);
+          setUpcomingAppointmentsCount(count);
+          
+          // Fetch full appointment details
+          console.log('Fetching appointments for role:', role);
+          const appointments = role === "doctor" 
+            ? await appointmentService.getDoctorAppointments()
+            : await appointmentService.getAppointmentHistory();
+          
+          console.log('All appointments:', appointments);
+            
+          // Filter for upcoming appointments
+          const upcoming = appointments.filter(app => {
+            // Extract date from the JSONB structure
+            const appDateStr = app.appointment_time.date;
+            console.log('Appointment date string:', appDateStr);
+            
+            // Create date object from the string
+            const appDate = new Date(appDateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to start of day
+            
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7); // For 7 days
+            
+            const isUpcoming = appDate >= today && appDate <= nextWeek && app.status === 'Scheduled';
+            console.log('Appointment:', appDateStr, 'Status:', app.status, 'Is upcoming:', isUpcoming);
+            return isUpcoming;
+          });
+          
+          console.log('Filtered upcoming appointments:', upcoming);
+          setUpcomingAppointments(upcoming);
+        } catch (error) {
+          console.error('Failed to fetch upcoming appointments:', error);
+        }
+      }
+    };
+
+    fetchUpcomingAppointments();
+    // Refresh count every 5 minutes
+    const interval = setInterval(fetchUpcomingAppointments, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, role]);
 
   const handleMobileMenuOpen = (event) => {
     setMobileMenuAnchor(event.currentTarget);
@@ -66,6 +126,14 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
 
   const handleProfileMenuClose = () => {
     setProfileMenuAnchor(null);
+  };
+
+  const handleNotificationClick = (event) => {
+    setNotificationMenuAnchor(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationMenuAnchor(null);
   };
 
   const handleLogout = () => {
@@ -192,8 +260,11 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
                     <Search fontSize="medium" />
                   </IconButton>
                   
-                  <IconButton sx={{ color: 'text.secondary' }}>
-                    <Badge badgeContent={4} color="error">
+                  <IconButton 
+                    sx={{ color: 'text.secondary' }}
+                    onClick={handleNotificationClick}
+                  >
+                    <Badge badgeContent={upcomingAppointmentsCount} color="error">
                       <Notifications fontSize="medium" />
                     </Badge>
                   </IconButton>
@@ -360,6 +431,67 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
             <Logout sx={{ mr: 1.5 }} /> Logout
           </MenuItem>
         )}
+      </Menu>
+
+      {/* Add Notification Menu */}
+      <Menu
+        anchorEl={notificationMenuAnchor}
+        open={Boolean(notificationMenuAnchor)}
+        onClose={handleNotificationClose}
+        PaperProps={{
+          elevation: 1,
+          sx: {
+            mt: 1.5,
+            minWidth: 300,
+            maxWidth: 400,
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Upcoming Appointments
+          </Typography>
+        </Box>
+        <Divider />
+        <List sx={{ p: 0 }}>
+          {upcomingAppointments.length === 0 ? (
+            <ListItem>
+              <ListItemText 
+                primary="No upcoming appointments"
+                secondary="You have no appointments scheduled for the next week"
+              />
+            </ListItem>
+          ) : (
+            upcomingAppointments.map((appointment) => (
+              <ListItem 
+                key={appointment.id}
+                button
+                onClick={() => {
+                  handleNotificationClose();
+                  navigate(role === "doctor" ? "/doctor-appointments" : "/appointments");
+                }}
+              >
+                <ListItemText
+                  primary={role === "doctor" ? appointment.patient_name : appointment.doctor_name}
+                  secondary={
+                    <React.Fragment>
+                      <Typography component="span" variant="body2">
+                        {new Date(appointment.appointment_time.date).toLocaleDateString()} at{' '}
+                        {new Date(appointment.appointment_time.date + 'T' + appointment.appointment_time.time).toLocaleTimeString()}
+                      </Typography>
+                      <br />
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        {appointment.problem_description}
+                      </Typography>
+                    </React.Fragment>
+                  }
+                />
+              </ListItem>
+            ))
+          )}
+        </List>
       </Menu>
 
       <Outlet />

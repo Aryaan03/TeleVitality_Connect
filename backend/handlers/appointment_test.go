@@ -826,3 +826,66 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestGetDoctorAppointmentTimes(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := AppointmentHandler{DB: db}
+
+	t.Run("ValidRequest", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/appointments/times?doctor_id=123", nil)
+		rec := httptest.NewRecorder()
+
+		rows := sqlmock.NewRows([]string{"appointment_time"}).
+			AddRow(`{"date": "2025-04-01", "time": "10:00"}`).
+			AddRow(`{"date": "2025-04-02", "time": "14:30"}`)
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT appointment_time FROM appointments WHERE doctor_id = $1 ORDER BY appointment_time`)).
+			WithArgs(123).
+			WillReturnRows(rows)
+
+		handler.GetDoctorAppointmentTimes(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "2025-04-01")
+		assert.Contains(t, rec.Body.String(), "2025-04-02")
+	})
+
+	t.Run("MissingDoctorID", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/appointments/times", nil)
+		rec := httptest.NewRecorder()
+
+		handler.GetDoctorAppointmentTimes(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Doctor ID is required")
+	})
+
+	t.Run("InvalidDoctorID", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/appointments/times?doctor_id=invalid", nil)
+		rec := httptest.NewRecorder()
+
+		handler.GetDoctorAppointmentTimes(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Invalid Doctor ID")
+	})
+
+	t.Run("DatabaseError", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/appointments/times?doctor_id=123", nil)
+		rec := httptest.NewRecorder()
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT appointment_time FROM appointments WHERE doctor_id = $1 ORDER BY appointment_time`)).
+			WithArgs(123).
+			WillReturnError(sql.ErrConnDone)
+
+		handler.GetDoctorAppointmentTimes(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Failed to fetch appointment times")
+	})
+}

@@ -136,9 +136,13 @@ export const appointmentService = {
 
   async updateAppointmentNotes(appointmentId, notes) {
     try {
-      
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/appointment/${appointmentId}/notes`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ notes }),
       });
   
@@ -153,4 +157,42 @@ export const appointmentService = {
     }
   },
 
+  async getUpcomingAppointmentsCount() {
+    try {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      console.log('Token present:', !!token);
+      console.log('Token value:', token ? token.substring(0, 10) + '...' : 'none');
+      console.log('User role:', role);
+      
+      if (!token) {
+        console.error('No token found in localStorage');
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_URL}/appointments/upcoming`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error('Failed to fetch upcoming appointments count');
+      }
+      
+      const data = await response.json();
+      console.log('Upcoming appointments count:', data.count);
+      return data.count;
+    } catch (error) {
+      console.error('Error in getUpcomingAppointmentsCount:', error);
+      throw new Error(error.message);
+    }
+  }
 };

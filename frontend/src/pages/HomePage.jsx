@@ -96,7 +96,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
     }
   ];
   
-  // Stats with replaced uptime
+  // Stats 
   const stats = [
     { number: "94.5%", label: "Patient Satisfaction" },
     { number: "10K+", label: "Consultations Monthly" },
@@ -104,7 +104,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
     { number: "50+", label: "Medical Specialties" }
   ];
   
-  // Updated Pricing plans with additional features in Basic
+  // Updated Pricing plans
   const plans = [
     {
       title: "Basic",

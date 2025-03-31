@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -275,4 +277,93 @@ func TestUpdateProfile(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Invalid token")
 	})
+}
+
+func TestGetProfile_DatabaseScanError(t *testing.T) {
+	mockDB, mock, _ := sqlmock.New()
+	handler := &ProfileHandler{DB: mockDB}
+
+	userID := 1
+	tokenString, _ := generateTestToken(userID)
+
+	// Return unexpected data type for phone_number (int instead of string)
+	mock.ExpectQuery("SELECT .* FROM profiles").
+		WithArgs(userID).
+		WillReturnRows(sqlmock.NewRows([]string{"phone_number"}).AddRow(1234567890))
+
+	req := httptest.NewRequest("GET", "/api/protected/profile", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.GetProfile(rec, req)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func TestUpdateProfile_MissingRequiredFields(t *testing.T) {
+	mockDB, mock, _ := sqlmock.New()
+	handler := &ProfileHandler{DB: mockDB}
+
+	userID := 1
+	tokenString, _ := generateTestToken(userID)
+
+	// Mock database to return error on missing required fields
+	mock.ExpectExec("INSERT INTO profiles").
+		WillReturnError(fmt.Errorf("null value in column \"first_name\""))
+
+	incompleteProfile := `{
+        "lastName": "Doe",
+        "phoneNumber": "1234567890"
+    }`
+
+	req := httptest.NewRequest("PUT", "/api/protected/profile", strings.NewReader(incompleteProfile))
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.UpdateProfile(rec, req)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func TestUpdateProfile_InvalidDataTypes(t *testing.T) {
+	mockDB, _, _ := sqlmock.New()
+	handler := &ProfileHandler{DB: mockDB}
+
+	userID := 1
+	tokenString, _ := generateTestToken(userID)
+
+	invalidProfile := `{
+        "firstName": 123,
+        "consentTelemedicine": "not-a-boolean"
+    }`
+
+	req := httptest.NewRequest("PUT", "/api/protected/profile", strings.NewReader(invalidProfile))
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.UpdateProfile(rec, req)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestUpdateProfile_ZeroRowsAffected(t *testing.T) {
+	mockDB, mock, _ := sqlmock.New()
+	handler := &ProfileHandler{DB: mockDB}
+
+	userID := 1
+	tokenString, _ := generateTestToken(userID)
+
+	mock.ExpectExec("INSERT INTO profiles").
+		WillReturnResult(sqlmock.NewResult(0, 0)) // 0 rows affected
+
+	validProfile := `{
+        "firstName": "John",
+        "lastName": "Doe",
+        "phoneNumber": "1234567890"
+    }`
+
+	req := httptest.NewRequest("PUT", "/api/protected/profile", strings.NewReader(validProfile))
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.UpdateProfile(rec, req)
+	assert.Equal(t, http.StatusOK, rec.Code) // Still returns 200 as operation was "successful"
 }
