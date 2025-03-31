@@ -204,6 +204,8 @@ To run the unit tests, follow these steps:
    - Detailed logs generated for failures, including database errors and invalid inputs.
 
 
+# Sprint 3 Frontend Documentation
+
 ## Frontend Development
 
 ### **Updated UI and Visual features in This Sprint**
@@ -226,24 +228,68 @@ To run the unit tests, follow these steps:
 - Enhanced navigation across various pages.
 ---
 
-## **Testing**
+## ** FrontEnd E2E Testing**
 
-### Cypress End-to-End Tests (Frontend)
+## Overview
+In Sprint 3, Cypress was used as the primary testing framework to ensure the quality and functionality of various features in the application. Cypress's ability to perform end-to-end, integration, and unit testing directly in the browser made it an ideal choice for validating user workflows and application behavior.
 
-**Pages Covered:**
-1. Contact Page
-2. Doctor Authentication (Login/Register)
-3. Doctor Profile
-4. Forgot Password
-5. Patient Authentication (Login/Register)
-6. Home Page
+## Why Cypress?
+Cypress was chosen for its unique features and benefits:
 
----
+- **Real-Time Reloads:** Automatically reruns tests upon saving, speeding up development.
+- **Automatic Waiting:** Eliminates the need for explicit waits by waiting for DOM elements, animations, and AJAX calls to complete.
+- **Ease of Debugging:** Provides detailed logs and snapshots for debugging failed tests.
+- **Cross-Browser Testing:** Supports testing across multiple browsers like Chrome, Firefox, and Edge.
+- **All-in-One Framework:** Combines test writing, execution, and debugging in a single tool.
 
-**Detailed Test Cases:**
+## Tests Written
+### 1. Doctor Registration Modal
+- Verified modal visibility.
+- Tested form validation errors:
+  - Empty fields
+  - Invalid email formats
+  - Mismatched passwords
+- Mocked API responses for successful and failed registrations.
+- Validated modal closure after successful submission.
 
+### 2. Patient Registration Modal
+- Similar tests as the doctor registration modal but tailored for patient-specific workflows.
+- Included validation for required fields and successful form submission.
 
----
+### 3. Contact Page
+- Verified page rendering with static content like contact details.
+- Tested form visibility and placeholder text.
+- Validated form submission with proper data and error messages for invalid inputs.
+
+### 4. Forgot Password Page
+- Tested form rendering (email, new password, confirm password fields).
+- Validated error messages for:
+  - Empty fields
+  - Mismatched passwords
+  - Invalid email formats
+- Mocked API responses to test successful password resets.
+
+### 5. Doctor Profile Page
+- Verified page elements like doctor name, specialization, contact info, and profile picture.
+- Tested navigation links (e.g., Edit Profile).
+- Mocked API responses to validate data rendering.
+- Performed responsive design testing on mobile viewports.
+
+## Key Achievements
+- Achieved comprehensive test coverage for all critical pages using Cypress.
+- Mocked API responses with `cy.intercept()` to simulate backend behavior without relying on live servers.
+- Improved test reliability by using semantic selectors (`data-testid`) instead of dynamic class names.
+- Enhanced debugging with Cypress's built-in tools like snapshots and detailed logs.
+
+## Challenges Faced
+- **Dynamic Selectors:** Initial reliance on class names caused flaky tests; resolved by adding `data-testid` attributes for stable selectors.
+- **API Dependencies:** Mocking API responses was necessary to isolate frontend behavior from backend availability.
+- **Cross-Browser Compatibility:** Ensuring consistent behavior across browsers required additional testing effort.
+
+## Improvements Made
+- Refactored test files by defining constants for repeated selectors to improve readability and maintainability.
+- Added accessibility checks using plugins like `cypress-axe` to ensure compliance with accessibility standards.
+- Expanded test cases to include edge scenarios such as invalid inputs and partial submissions.
 
 ## **How to Run Cypress Tests**
 
@@ -265,6 +311,8 @@ To run the unit tests, follow these steps:
     - `forgotPassword.cy.js`
     - `Login_Doctor.cy.js`
     - `Register_Patient.cy.js`
+    - `Doctor_Register.cy.js`
+    - `Patient_Register.cy.js`
 
 ---
 
