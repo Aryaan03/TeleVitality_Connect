@@ -668,7 +668,7 @@ export default function AppointmentsPage() {
                       <Box>
                         <Typography>Dr. {doc.firstName} {doc.lastName}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {doc.specialization} • {doc.years_of_experience} years experience
+                          {doc.specialization} • {doc.yearsOfExperience} years experience
                         </Typography>
                       </Box>
                     </Box>
