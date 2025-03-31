@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -248,7 +249,7 @@ func TestGetDoctorAppointments(t *testing.T) {
 		WithArgs(2).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Mock the SELECT query with all 12 columns
+	// 2. Mock the SELECT query with all 14 columns
 	mock.ExpectQuery(`SELECT (.+) FROM appointments`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{
@@ -264,6 +265,8 @@ func TestGetDoctorAppointments(t *testing.T) {
 			"last_name",
 			"file_name",
 			"file_data",
+			"doctor_first_name",
+			"doctor_last_name",
 		}).AddRow(
 			1, // id
 			1, // patient_id
@@ -277,6 +280,8 @@ func TestGetDoctorAppointments(t *testing.T) {
 			"Smith",          // last_name
 			nil,              // file_name (NULL)
 			nil,              // file_data (NULL)
+			"John",           // doctor_first_name
+			"Doe",            // doctor_last_name
 		))
 
 	handler.GetDoctorAppointments(w, req)
@@ -705,19 +710,19 @@ func TestGetAppointmentHistory_DatabaseError(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
 
-	// 1. Mock the UPDATE query
+	// 1. Mock the UPDATE query with correct JSON operator syntax
 	mock.ExpectExec(regexp.QuoteMeta(`
         UPDATE appointments 
         SET status = 'Completed' 
         WHERE patient_id = $1 
         AND status = 'Scheduled' 
-        AND appointment_time::date < CURRENT_DATE
-        OR (appointment_time::date = CURRENT_DATE AND appointment_time::time < CURRENT_TIME)
+        AND (appointment_time->>'date')::date < CURRENT_DATE
+        OR ((appointment_time->>'date')::date = CURRENT_DATE AND (appointment_time->>'time')::time < CURRENT_TIME)
     `)).
 		WithArgs(userID).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Correct the SELECT mock to match actual query
+	// 2. Mock the SELECT query with correct JSON operator syntax
 	mock.ExpectQuery(regexp.QuoteMeta(`
         SELECT 
             a.id, 
@@ -774,7 +779,7 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
 
-	// 1. Mock the UPDATE query
+	// 1. Mock the UPDATE query with correct JSON operator syntax
 	mock.ExpectExec(regexp.QuoteMeta(`
         UPDATE appointments 
         SET status = 'Completed' 
@@ -786,7 +791,7 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
 		WithArgs(doctorID).
 		WillReturnResult(sqlmock.NewResult(0, 0))
 
-	// 2. Mock the SELECT query with exact structure
+	// 2. Mock the SELECT query with correct structure including doctor profile join
 	mock.ExpectQuery(regexp.QuoteMeta(`
         SELECT 
             a.id, 
@@ -800,9 +805,12 @@ func TestGetDoctorAppointments_DatabaseError(t *testing.T) {
             p.first_name,
             p.last_name,
             af.file_name,
-            af.file_data
+            af.file_data,
+            d.first_name as doctor_first_name,
+            d.last_name as doctor_last_name
         FROM appointments a
         JOIN profiles p ON a.patient_id = p.user_id
+        JOIN doctor_profiles d ON a.doctor_id = d.user_id
         LEFT JOIN appointment_files af ON a.id = af.appointment_id
         WHERE a.doctor_id = $1
         ORDER BY 
@@ -888,4 +896,53 @@ func TestGetDoctorAppointmentTimes(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Failed to fetch appointment times")
 	})
+}
+
+func TestGenerateMeetLink(t *testing.T) {
+	// Test that the generated link follows the correct format
+	link := generateMeetLink()
+
+	// Check if the link starts with the correct base URL
+	assert.True(t, strings.HasPrefix(link, "https://meet.jit.si/"), "Link should start with https://meet.jit.si/")
+
+	// Extract the room name (part after the base URL)
+	roomName := strings.TrimPrefix(link, "https://meet.jit.si/")
+
+	// Split the room name into parts
+	parts := strings.Split(roomName, "-")
+	assert.Equal(t, 3, len(parts), "Room name should have 3 parts: adjective-noun-number")
+
+	// Check if the number part is actually a number
+	number, err := strconv.Atoi(parts[2])
+	assert.NoError(t, err, "Last part should be a number")
+	assert.True(t, number >= 0 && number < 1000, "Number should be between 0 and 999")
+
+	// Test uniqueness by generating multiple links
+	links := make(map[string]bool)
+	for i := 0; i < 100; i++ {
+		newLink := generateMeetLink()
+		assert.False(t, links[newLink], "Generated link should be unique")
+		links[newLink] = true
+	}
+
+	// Test that the generated links contain valid adjectives and nouns
+	validAdjectives := map[string]bool{
+		"happy": true, "sunny": true, "quick": true,
+		"lucky": true, "funny": true, "brave": true,
+	}
+
+	validNouns := map[string]bool{
+		"cat": true, "dog": true, "fox": true,
+		"lion": true, "tiger": true, "panda": true,
+	}
+
+	// Check a few random links for valid adjectives and nouns
+	for i := 0; i < 10; i++ {
+		link := generateMeetLink()
+		roomName := strings.TrimPrefix(link, "https://meet.jit.si/")
+		parts := strings.Split(roomName, "-")
+
+		assert.True(t, validAdjectives[parts[0]], "First part should be a valid adjective")
+		assert.True(t, validNouns[parts[1]], "Second part should be a valid noun")
+	}
 }
