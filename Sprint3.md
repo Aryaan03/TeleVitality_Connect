@@ -15,8 +15,12 @@
 - Implemented authorization checks to ensure only authorized doctors can modify notes.
 
 #### **Appointment Management**
+- When a doctor cancels an appointment, they can provide a reason for the cancellation, ensuring that the patient is informed about the reason behind the cancellation.
 - Created endpoints to fetch doctor availability and upcoming appointments.
 - Added functionality to cancel appointments with a reason.
+
+#### **Notifications**
+- Implemented a notification system to alert patients about their upcoming appointments within the next week. Patients receive timely reminders, helping them stay informed and reducing the chances of missed appointments.
 
 #### **Security Enhancements**
 - Implemented JWT-based authentication for all endpoints.
