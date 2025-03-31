@@ -116,6 +116,8 @@ export const appointmentService = {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to cancel appointment');
       }
+      // Dispatch event after successful cancellation
+      window.dispatchEvent(new Event('appointmentUpdated'));
       return await response.json();
     } catch (error) {
       throw new Error(error.message);
@@ -151,6 +153,8 @@ export const appointmentService = {
         throw new Error(errorData.error || 'Failed to update notes');
       }
   
+      // Dispatch event after successful notes update
+      window.dispatchEvent(new Event('appointmentUpdated'));
       return await response.json();
     } catch (error) {
       throw new Error(error.message);

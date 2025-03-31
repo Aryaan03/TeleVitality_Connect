@@ -62,47 +62,57 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
   const [upcomingAppointmentsCount, setUpcomingAppointmentsCount] = useState(0);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
 
-  useEffect(() => {
-    const fetchUpcomingAppointments = async () => {
-      if (isLoggedIn) {
-        try {
-          console.log('Fetching appointments in Navigation component...');
+  const fetchUpcomingAppointments = async () => {
+    if (isLoggedIn) {
+      try {
+        console.log('Fetching appointments in Navigation component...');
+        
+        // Fetch appointments based on role
+        console.log('Fetching appointments for role:', role);
+        const appointments = role === "doctor" 
+          ? await appointmentService.getDoctorAppointments()
+          : await appointmentService.getAppointmentHistory();
+        
+        console.log('All appointments:', appointments);
           
-          // Fetch appointments based on role
-          console.log('Fetching appointments for role:', role);
-          const appointments = role === "doctor" 
-            ? await appointmentService.getDoctorAppointments()
-            : await appointmentService.getAppointmentHistory();
-          
-          console.log('All appointments:', appointments);
-            
-          // Filter for upcoming appointments
-          const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          
-          const nextWeek = new Date(today);
-          nextWeek.setDate(today.getDate() + 7);
-          
-          const upcoming = appointments.filter(app => {
-            const appDateTime = new Date(`${app.appointment_time.date}T${app.appointment_time.time}`);
-            return appDateTime >= now && 
-                   appDateTime <= nextWeek && 
-                   app.status === 'Scheduled';
-          });
-          
-          console.log('Filtered upcoming appointments:', upcoming);
-          setUpcomingAppointments(upcoming);
-          setUpcomingAppointmentsCount(upcoming.length);
-        } catch (error) {
-          console.error('Failed to fetch appointments:', error);
-        }
+        // Filter for upcoming appointments
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+        
+        const upcoming = appointments.filter(app => {
+          const appDateTime = new Date(`${app.appointment_time.date}T${app.appointment_time.time}`);
+          return appDateTime >= now && 
+                 appDateTime <= nextWeek && 
+                 app.status === 'Scheduled';
+        });
+        
+        console.log('Filtered upcoming appointments:', upcoming);
+        setUpcomingAppointments(upcoming);
+        setUpcomingAppointmentsCount(upcoming.length);
+      } catch (error) {
+        console.error('Failed to fetch appointments:', error);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchUpcomingAppointments();
     // Refresh count every 5 minutes
     const interval = setInterval(fetchUpcomingAppointments, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+
+    // Add event listener for appointment updates
+    const handleAppointmentUpdate = () => {
+      fetchUpcomingAppointments();
+    };
+    window.addEventListener('appointmentUpdated', handleAppointmentUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('appointmentUpdated', handleAppointmentUpdate);
+    };
   }, [isLoggedIn, role]);
 
   const handleMobileMenuOpen = (event) => {
