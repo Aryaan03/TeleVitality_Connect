@@ -88,14 +88,6 @@
 - **`TestBookAppointment_InvalidDate`** - Rejects dates in incorrect ISO format.
 - **`TestGetDoctorsBySpecialty_InvalidID`** - Handles non-existent specialty IDs.
 
-#### **Test Metrics:**
-```markdown
-- Test coverage: 82% (backend/handlers package)
-- Total assertions: 1,234
-- Avg. test execution time: 0.2s
-- Critical path coverage: 100%
-```
-
 ---
 
 ## 3. Updated Backend API Documentation
