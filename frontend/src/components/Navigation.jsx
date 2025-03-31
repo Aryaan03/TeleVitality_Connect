@@ -66,12 +66,9 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
     const fetchUpcomingAppointments = async () => {
       if (isLoggedIn) {
         try {
-          console.log('Fetching upcoming appointments in Navigation component...');
-          const count = await appointmentService.getUpcomingAppointmentsCount();
-          console.log('Setting upcoming appointments count to:', count);
-          setUpcomingAppointmentsCount(count);
+          console.log('Fetching appointments in Navigation component...');
           
-          // Fetch full appointment details
+          // Fetch appointments based on role
           console.log('Fetching appointments for role:', role);
           const appointments = role === "doctor" 
             ? await appointmentService.getDoctorAppointments()
@@ -80,28 +77,31 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
           console.log('All appointments:', appointments);
             
           // Filter for upcoming appointments
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          
+          const nextWeek = new Date(today);
+          nextWeek.setDate(today.getDate() + 7);
+          
           const upcoming = appointments.filter(app => {
-            // Extract date from the JSONB structure
-            const appDateStr = app.appointment_time.date;
-            console.log('Appointment date string:', appDateStr);
+            const appDateTime = new Date(`${app.appointment_time.date}T${app.appointment_time.time}`);
+            const isUpcoming = appDateTime >= now && 
+                             appDateTime <= nextWeek && 
+                             app.status === 'Scheduled';
             
-            // Create date object from the string
-            const appDate = new Date(appDateStr);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Set to start of day
-            
-            const nextWeek = new Date(today);
-            nextWeek.setDate(today.getDate() + 7); // Add 7 days
-            
-            const isUpcoming = appDate >= today && appDate <= nextWeek && app.status === 'Scheduled';
-            console.log('Appointment:', appDateStr, 'Status:', app.status, 'Is upcoming:', isUpcoming);
+            console.log('Appointment:', appDateTime.toISOString(), 
+                       'Status:', app.status, 
+                       'Is upcoming:', isUpcoming,
+                       'Now:', now.toISOString(),
+                       'Next week:', nextWeek.toISOString());
             return isUpcoming;
           });
           
           console.log('Filtered upcoming appointments:', upcoming);
           setUpcomingAppointments(upcoming);
+          setUpcomingAppointmentsCount(upcoming.length);
         } catch (error) {
-          console.error('Failed to fetch upcoming appointments:', error);
+          console.error('Failed to fetch appointments:', error);
         }
       }
     };
@@ -474,12 +474,19 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
                 }}
               >
                 <ListItemText
-                  primary={role === "doctor" ? appointment.patient_name : appointment.doctor_name}
+                  primary={role === "doctor" ? `Patient: ${appointment.patient_name}` : `Dr. ${appointment.doctor_name}`}
                   secondary={
                     <React.Fragment>
                       <Typography component="span" variant="body2">
-                        {new Date(appointment.appointment_time.date).toLocaleDateString()} at{' '}
-                        {new Date(appointment.appointment_time.date + 'T' + appointment.appointment_time.time).toLocaleTimeString()}
+                        {new Date(`${appointment.appointment_time.date}T${appointment.appointment_time.time}`).toLocaleString('en-US', {
+                          weekday: 'short',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
                       </Typography>
                       <br />
                       <Typography component="span" variant="body2" color="text.secondary">

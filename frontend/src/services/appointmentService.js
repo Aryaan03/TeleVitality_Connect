@@ -170,7 +170,9 @@ export const appointmentService = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_URL}/appointments/upcoming`, {
+      // Use the correct endpoint based on role
+      const endpoint = role === "doctor" ? "/doctor/appointments" : "/appointments/history";
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,12 +186,26 @@ export const appointmentService = {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error response:', errorData);
-        throw new Error('Failed to fetch upcoming appointments count');
+        throw new Error('Failed to fetch appointments');
       }
       
-      const data = await response.json();
-      console.log('Upcoming appointments count:', data.count);
-      return data.count;
+      const appointments = await response.json();
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      
+      const upcomingCount = appointments.filter(app => {
+        const appDate = new Date(app.appointment_time.date);
+        return appDate >= today && 
+               appDate <= nextWeek && 
+               app.status === 'Scheduled';
+      }).length;
+      
+      console.log('Upcoming appointments count:', upcomingCount);
+      return upcomingCount;
     } catch (error) {
       console.error('Error in getUpcomingAppointmentsCount:', error);
       throw new Error(error.message);

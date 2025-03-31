@@ -490,11 +490,12 @@ export default function AppointmentsPage() {
     }
   
     const selectedDate = new Date(selectedSlot);
-    const utcDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
-  
+    // Convert to local timezone string
+    const localDate = new Date(selectedDate.getTime() + selectedDate.getTimezoneOffset() * 60000);
+    
     const appointmentTime = {
-      date: utcDate.toISOString().split('T')[0],
-      time: utcDate.toISOString().split('T')[1].split('.')[0],
+      date: localDate.toISOString().split('T')[0],
+      time: localDate.toISOString().split('T')[1].split('.')[0],
     };
   
     const formData = new FormData();

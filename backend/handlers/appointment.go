@@ -233,8 +233,8 @@ func (h *AppointmentHandler) GetAppointmentHistory(w http.ResponseWriter, r *htt
 			SET status = 'Completed' 
 			WHERE patient_id = $1 
 			AND status = 'Scheduled' 
-			AND appointment_time::date < CURRENT_DATE
-			OR (appointment_time::date = CURRENT_DATE AND appointment_time::time < CURRENT_TIME)
+			AND (appointment_time->>'date')::date < CURRENT_DATE
+			OR ((appointment_time->>'date')::date = CURRENT_DATE AND (appointment_time->>'time')::time < CURRENT_TIME)
 		`
 		_, err := h.DB.Exec(updatePastAppointmentsQuery, int(patientID))
 		if err != nil {
@@ -404,9 +404,12 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				p.first_name,
 				p.last_name,
 				af.file_name,
-				af.file_data
+				af.file_data,
+				d.first_name as doctor_first_name,
+				d.last_name as doctor_last_name
 			FROM appointments a
 			JOIN profiles p ON a.patient_id = p.user_id
+			JOIN doctor_profiles d ON a.doctor_id = d.user_id
 			LEFT JOIN appointment_files af ON a.id = af.appointment_id
 			WHERE a.doctor_id = $1
 			ORDER BY 
@@ -434,6 +437,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				notes                             sql.NullString
 				meetLink                          sql.NullString
 				patientFirstName, patientLastName string
+				doctorFirstName, doctorLastName   string
 				appointmentTimeJSON               []byte
 				fileName, fileData                []byte
 			)
@@ -451,6 +455,8 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				&patientLastName,
 				&fileName,
 				&fileData,
+				&doctorFirstName,
+				&doctorLastName,
 			); err != nil {
 				log.Println("Error scanning appointment:", err)
 				http.Error(w, `{"error": "Failed to scan appointments"}`, http.StatusInternalServerError)
@@ -464,8 +470,13 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				appointmentTime = map[string]interface{}{}
 			}
 
-			// Build the patient's full name
+			// Build the patient's and doctor's full names
 			patientName := fmt.Sprintf("%s %s", patientFirstName, patientLastName)
+			doctorName := fmt.Sprintf("%s %s", doctorFirstName, doctorLastName)
+
+			// Log appointment details for debugging
+			log.Printf("Appointment ID: %d, Status: %s, Date: %v, Patient: %s",
+				id, status, appointmentTime["date"], patientName)
 
 			// Create appointment object
 			appointment := map[string]interface{}{
@@ -473,6 +484,7 @@ func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *htt
 				"patient_id":          patientID,
 				"doctor_id":           docID,
 				"patient_name":        patientName,
+				"doctor_name":         doctorName,
 				"appointment_time":    appointmentTime,
 				"problem_description": problemDesc,
 				"status":              status,
