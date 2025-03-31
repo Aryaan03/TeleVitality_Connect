@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -895,4 +896,53 @@ func TestGetDoctorAppointmentTimes(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Failed to fetch appointment times")
 	})
+}
+
+func TestGenerateMeetLink(t *testing.T) {
+	// Test that the generated link follows the correct format
+	link := generateMeetLink()
+
+	// Check if the link starts with the correct base URL
+	assert.True(t, strings.HasPrefix(link, "https://meet.jit.si/"), "Link should start with https://meet.jit.si/")
+
+	// Extract the room name (part after the base URL)
+	roomName := strings.TrimPrefix(link, "https://meet.jit.si/")
+
+	// Split the room name into parts
+	parts := strings.Split(roomName, "-")
+	assert.Equal(t, 3, len(parts), "Room name should have 3 parts: adjective-noun-number")
+
+	// Check if the number part is actually a number
+	number, err := strconv.Atoi(parts[2])
+	assert.NoError(t, err, "Last part should be a number")
+	assert.True(t, number >= 0 && number < 1000, "Number should be between 0 and 999")
+
+	// Test uniqueness by generating multiple links
+	links := make(map[string]bool)
+	for i := 0; i < 100; i++ {
+		newLink := generateMeetLink()
+		assert.False(t, links[newLink], "Generated link should be unique")
+		links[newLink] = true
+	}
+
+	// Test that the generated links contain valid adjectives and nouns
+	validAdjectives := map[string]bool{
+		"happy": true, "sunny": true, "quick": true,
+		"lucky": true, "funny": true, "brave": true,
+	}
+
+	validNouns := map[string]bool{
+		"cat": true, "dog": true, "fox": true,
+		"lion": true, "tiger": true, "panda": true,
+	}
+
+	// Check a few random links for valid adjectives and nouns
+	for i := 0; i < 10; i++ {
+		link := generateMeetLink()
+		roomName := strings.TrimPrefix(link, "https://meet.jit.si/")
+		parts := strings.Split(roomName, "-")
+
+		assert.True(t, validAdjectives[parts[0]], "First part should be a valid adjective")
+		assert.True(t, validNouns[parts[1]], "Second part should be a valid noun")
+	}
 }
