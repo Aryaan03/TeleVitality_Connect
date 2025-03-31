@@ -282,6 +282,6 @@ We've implemented comprehensive unit tests for critical authentication component
    
 2. **Run all tests**:<br>
    ```bash
-   npm test
+   npm test -- --WatchAll=false
 
 
