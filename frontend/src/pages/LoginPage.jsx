@@ -191,7 +191,7 @@ export default function LoginPage({ open, handleClose }) {
                 <Box sx={{ 
                   display: 'flex', 
                   justifyContent: 'center', 
-                  mt: 1  // Changed from mt: 2
+                  mt: 1  
                 }}>
                   <Button 
                     variant="text" 
@@ -215,7 +215,7 @@ export default function LoginPage({ open, handleClose }) {
                   sx={{ 
                     textAlign: 'center',
                     color: 'text.secondary',
-                    mt: 2,  // Changed from mt: 3
+                    mt: 2,  
                     fontSize: '0.9rem'
                   }}
                 >
@@ -245,8 +245,8 @@ export default function LoginPage({ open, handleClose }) {
                   alignItems: 'center', 
                   justifyContent: 'center',
                   gap: 1,
-                  mt: 0.5,  // Reduced from mt: 1
-                  mb: 1.5   // Reduced from mb: 2
+                  mt: 0.5,  
+                  mb: 1.5   
                 }}>
                   <Security fontSize="small" sx={{ color: 'success.main' }} />
                   <Typography 

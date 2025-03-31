@@ -91,7 +91,7 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
             today.setHours(0, 0, 0, 0); // Set to start of day
             
             const nextWeek = new Date(today);
-            nextWeek.setDate(today.getDate() + 7); // Add 7 days
+            nextWeek.setDate(today.getDate() + 7); // For 7 days
             
             const isUpcoming = appDate >= today && appDate <= nextWeek && app.status === 'Scheduled';
             console.log('Appointment:', appDateStr, 'Status:', app.status, 'Is upcoming:', isUpcoming);

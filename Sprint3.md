@@ -190,3 +190,89 @@
 4. **Error Logging:**
    - Detailed logs generated for failures, including database errors and invalid inputs.
 
+
+## Frontend Development
+
+### **Updated UI and Visual features in This Sprint**
+
+#### **Doctor Pages**
+- **Doctor Register Page**: 
+- **Doctor Login Page**: 
+- **Doctor Profile Page**:
+  
+
+#### **Patient Pages**
+- **Appointments Page**: 
+- **Profile Page**:
+
+
+#### **Home Page**
+- Improved visual design with better navigation and layout.
+  
+#### **General Enhancements**
+- Enhanced navigation across various pages.
+---
+
+## **Testing**
+
+### Cypress End-to-End Tests (Frontend)
+
+**Pages Covered:**
+1. Contact Page
+2. Doctor Authentication (Login/Register)
+3. Doctor Profile
+4. Forgot Password
+5. Patient Authentication (Login/Register)
+6. Home Page
+
+---
+
+**Detailed Test Cases:**
+
+
+---
+
+## **How to Run Cypress Tests**
+
+1. Start the development server:
+    
+    npm run dev
+    
+
+2. Open Cypress Test Runner:
+    
+    npx cypress open
+    
+3. Select "E2E Testing" and choose a browser.
+
+4. Run test files such as:
+    - `doctorProfile.cy.js`
+    - `homePage.cy.js`
+    - `contact.cy.js`
+    - `forgotPassword.cy.js`
+    - `Login_Doctor.cy.js`
+    - `Register_Patient.cy.js`
+
+---
+
+### **Unit Tests (Frontend)**
+
+We've implemented comprehensive unit tests for critical authentication components using React Testing Library. These tests validate component rendering, user interactions, and form validation.
+
+#### Tested Components:
+1. **Login Page**
+2. **Patient Registration Page**
+
+---
+
+### **How to Run Frontend Unit Tests**
+
+1. **Install dependencies** (if not already installed):<br>
+   ```bash
+   npm install
+   
+2. **Run all tests**:<br>
+   ```bash
+   npm test
+
+
