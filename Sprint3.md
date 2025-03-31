@@ -90,6 +90,23 @@
 
 ---
 
+#### How to Run Tests
+
+To run the unit tests, follow these steps:
+
+1.  **Navigate to the Backend Directory:** Open your terminal and navigate to the `/backend` directory of the project.
+    ```bash
+    cd backend
+    ```
+2.  **Run the Tests:** Execute the following command to run all tests within the `handlers` package:
+    ```bash
+    go test -v ./handlers
+    ```
+
+    This command will execute all files ending with `_test.go` in the `handlers` package, providing detailed output of the test results. Make sure your database configurations are properly set up before running tests.
+
+---
+
 ## 3. Updated Backend API Documentation
 
 ### **Endpoint: Book Appointment**
