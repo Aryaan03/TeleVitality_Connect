@@ -3,7 +3,7 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { Phone, Email, LocationOn, Warning, Send } from '@mui/icons-material';
 
-// Validation Schema (unchanged)
+// Validation Schema 
 const contactSchema = Yup.object().shape({
   name: Yup.string().required('Required'),
   email: Yup.string().email('Invalid email').required('Required'),
@@ -46,7 +46,6 @@ export default function ContactPage() {
       </Typography>
 
       <Grid container spacing={4}>
-        {/* Contact Form - Enhanced styling */}
         <Grid item xs={12} md={6}>
           <Paper elevation={6} sx={{ 
             p: 4, 
@@ -59,7 +58,7 @@ export default function ContactPage() {
               initialValues={{ name: '', email: '', subject: '', message: '' }}
               validationSchema={contactSchema}
               onSubmit={(values) => {
-                console.log(values); // Original functionality maintained
+                console.log(values); 
               }}
             >
               {({ errors, touched }) => (
@@ -186,7 +185,7 @@ export default function ContactPage() {
           </Paper>
         </Grid>
 
-        {/* Contact Information - Enhanced styling */}
+        
         <Grid item xs={12} md={6}>
           <Paper elevation={6} sx={{ 
             p: 4, 
@@ -210,7 +209,6 @@ export default function ContactPage() {
             </Typography>
 
             <Stack spacing={4}>
-              {/* Emergency Alert - Enhanced */}
               <Paper sx={{ 
                 p: 3, 
                 bgcolor: '#fff3e0',
@@ -234,7 +232,6 @@ export default function ContactPage() {
                 </Stack>
               </Paper>
 
-              {/* Contact Details - Enhanced */}
               <Stack spacing={3}>
                 <Stack direction="row" spacing={3} alignItems="center" sx={{ p: 2, borderRadius: 2, '&:hover': { backgroundColor: '#f8f9fa' } }}>
                   <Phone color="primary" sx={{ fontSize: '2.2rem' }} />
@@ -274,7 +271,6 @@ export default function ContactPage() {
                 </Stack>
               </Stack>
 
-              {/* Map Embed - Enhanced */}
               <Box sx={{ 
                 height: 250, 
                 bgcolor: '#f5f5f5', 
@@ -298,12 +294,11 @@ export default function ContactPage() {
         </Grid>
       </Grid>
       
-      {/* Footer - Enhanced with increased top margin */}
       <Paper 
         component="footer" 
         elevation={6} 
         sx={{ 
-          mt: 12, // Increased from 8 to 12 for more spacing
+          mt: 12, 
           p: 4,
           backgroundColor: 'white',
           borderRadius: 4,

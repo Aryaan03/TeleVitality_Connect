@@ -85,16 +85,9 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
           
           const upcoming = appointments.filter(app => {
             const appDateTime = new Date(`${app.appointment_time.date}T${app.appointment_time.time}`);
-            const isUpcoming = appDateTime >= now && 
-                             appDateTime <= nextWeek && 
-                             app.status === 'Scheduled';
-            
-            console.log('Appointment:', appDateTime.toISOString(), 
-                       'Status:', app.status, 
-                       'Is upcoming:', isUpcoming,
-                       'Now:', now.toISOString(),
-                       'Next week:', nextWeek.toISOString());
-            return isUpcoming;
+            return appDateTime >= now && 
+                   appDateTime <= nextWeek && 
+                   app.status === 'Scheduled';
           });
           
           console.log('Filtered upcoming appointments:', upcoming);
