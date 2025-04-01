@@ -209,22 +209,56 @@ To run the unit tests, follow these steps:
 
 ### **Updated UI and Visual features in This Sprint**
 
-#### **Doctor Pages**
-- **Doctor Register Page**: 
-- **Doctor Login Page**: 
-- **Doctor Profile Page**:
-  
-
-#### **Patient Pages**
-- **Appointments Page**: 
-- **Profile Page**:
-
-
 #### **Home Page**
-- Improved visual design with better navigation and layout.
-  
+**Improved visual design & UI with better navigation and layout.**
+- **More UI Components** - Added Avatar, List, Rating, Chip, etc.
+- **Animations** - Fade, float, pulse effects for better visuals.
+- **Structured Layout** - Clear sections (Features, Pricing, Testimonials).
+- **Better Design** - Gradients, images, refined typography.
+- **Interactive Elements** - Rating displays, pricing cards, newsletter signup.
+- **Detailed Footer** - Expanded with social links, policies, and contact info.
+
+#### **Doctor and Patient Profile Pages**
+- **Styled Cards & Avatar** – Added polished cards and profile avatar with border.
+- **Icon-Based Inputs** – Form fields now include themed icons for clarity.
+- **Animated Section Headers** – Interactive headers with hover effects.
+- **Enhanced Buttons** – Modern buttons with hover animations and loading states.
+- **Consistent Icon Theme** – All icons follow a cohesive color scheme matching the app’s primary palette.
+- **Improved UI Spacing** – Better padding and margins for a cleaner, more organized layout.
+
+#### **Doctor and Patient Login & Register Pages**
+- **Professional Headers** – Clear relevant titles like "Medical Professional Portal", "Create Your Account", "Medical Professional Registration" and "Welcome Back" with descriptive subtitles.
+- **Icon Integration** – Added AccountCircle and Lock icons for intuitive form fields.
+- **Modern Gradient Button** – Login and Register buttons with smooth hover animation.
+- **Security Badge** – "256-bit SSL" indicator with lock icon for trust.
+- **Rounded Input Fields** – Soft corners with focus-state styling.
+- **Loading Spinner** – Visual feedback during submission.
+- **Secondary Action Links** – Styled "Forgot Password?" and "Request Access" options.
+
+#### **Contact**
+- **Modern Form Design** – Filled inputs with rounded corners and focus glow.
+- **Interactive Elements** – Hover effects on contact cards and emergency alert.
+- **Enhanced Visuals** – Larger icons, gradient button, and consistent shadows.
+- **Smooth Animations** – Subtle transitions for buttons and cards.
+- **Polished Layout** – Better spacing, borders, and responsive typography.
+
+### **Patients Make Appoitment**
+- **Tab View** – Three Tabs for Scheduled, Cancelled and Booked Appointments.
+- **Smooth Animations** – Subtle transitions for buttons and cards.
+- **Interactive Elements** – Hover effects on book and upload button.
+- **Improved UI Spacing** – Better padding and margins for a cleaner, more organized layout.
+
 #### **General Enhancements**
-- Enhanced navigation across various pages.
+- **Consistent Styling** – Uniform shadows, borders, and rounded corners.
+- **Interactive Hover States** – Buttons/cards with smooth animations.
+- **Icon Integration** – Relevant icons for better visual cues.
+- **Focus Indicators** – Glow/highlight for active form fields.
+- **Gradient Accents** – Buttons/headers with subtle gradients.
+- **Responsive Typography** – Font sizes that adapt to screen size.
+- **Micro-Interactions** – Small animations (e.g., hover, focus).
+- **Clear Visual Hierarchy** – Bold headings with divider accents.
+- **Accessible Contrast** – Readable text and color choices.
+- **Loading States** – Spinners/placeholders for async actions.
 
 ## **FrontEnd E2E Testing**
 
