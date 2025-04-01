@@ -205,7 +205,6 @@ To run the unit tests, follow these steps:
 
 
 # Sprint 3 Frontend Documentation
-
 ## Frontend Development
 
 ### **Updated UI and Visual features in This Sprint**
@@ -226,14 +225,13 @@ To run the unit tests, follow these steps:
   
 #### **General Enhancements**
 - Enhanced navigation across various pages.
----
 
-## ** FrontEnd E2E Testing**
+## **FrontEnd E2E Testing**
 
-## Overview
+### Overview
 In Sprint 3, Cypress was used as the primary testing framework to ensure the quality and functionality of various features in the application. Cypress's ability to perform end-to-end, integration, and unit testing directly in the browser made it an ideal choice for validating user workflows and application behavior.
 
-## Why Cypress?
+### Why Cypress?
 Cypress was chosen for its unique features and benefits:
 
 - **Real-Time Reloads:** Automatically reruns tests upon saving, speeding up development.
@@ -242,8 +240,8 @@ Cypress was chosen for its unique features and benefits:
 - **Cross-Browser Testing:** Supports testing across multiple browsers like Chrome, Firefox, and Edge.
 - **All-in-One Framework:** Combines test writing, execution, and debugging in a single tool.
 
-## Tests Written
-### 1. Doctor Registration Modal
+### Tests Written
+#### 1. Doctor Registration Modal
 - Verified modal visibility.
 - Tested form validation errors:
   - Empty fields
@@ -252,16 +250,16 @@ Cypress was chosen for its unique features and benefits:
 - Mocked API responses for successful and failed registrations.
 - Validated modal closure after successful submission.
 
-### 2. Patient Registration Modal
+#### 2. Patient Registration Modal
 - Similar tests as the doctor registration modal but tailored for patient-specific workflows.
 - Included validation for required fields and successful form submission.
 
-### 3. Contact Page
+#### 3. Contact Page
 - Verified page rendering with static content like contact details.
 - Tested form visibility and placeholder text.
 - Validated form submission with proper data and error messages for invalid inputs.
 
-### 4. Forgot Password Page
+#### 4. Forgot Password Page
 - Tested form rendering (email, new password, confirm password fields).
 - Validated error messages for:
   - Empty fields
@@ -269,38 +267,40 @@ Cypress was chosen for its unique features and benefits:
   - Invalid email formats
 - Mocked API responses to test successful password resets.
 
-### 5. Doctor Profile Page
+#### 5. Doctor Profile Page
 - Verified page elements like doctor name, specialization, contact info, and profile picture.
 - Tested navigation links (e.g., Edit Profile).
 - Mocked API responses to validate data rendering.
 - Performed responsive design testing on mobile viewports.
 
-## Key Achievements
+### Key Achievements
 - Achieved comprehensive test coverage for all critical pages using Cypress.
 - Mocked API responses with `cy.intercept()` to simulate backend behavior without relying on live servers.
 - Improved test reliability by using semantic selectors (`data-testid`) instead of dynamic class names.
 - Enhanced debugging with Cypress's built-in tools like snapshots and detailed logs.
 
-## Challenges Faced
+### Challenges Faced
 - **Dynamic Selectors:** Initial reliance on class names caused flaky tests; resolved by adding `data-testid` attributes for stable selectors.
 - **API Dependencies:** Mocking API responses was necessary to isolate frontend behavior from backend availability.
 - **Cross-Browser Compatibility:** Ensuring consistent behavior across browsers required additional testing effort.
 
-## Improvements Made
+### Improvements Made
 - Refactored test files by defining constants for repeated selectors to improve readability and maintainability.
 - Added accessibility checks using plugins like `cypress-axe` to ensure compliance with accessibility standards.
 - Expanded test cases to include edge scenarios such as invalid inputs and partial submissions.
 
-## **How to Run Cypress Tests**
+### **How to Run Cypress Tests**
 
 1. Start the development server:
-    
-    npm run dev
-    
+    ```sh
+   npm run dev
+   ```
 
 2. Open Cypress Test Runner:
-    
-    npx cypress open
+
+    ```sh
+   npx cypress open
+   ```
     
 3. Select "E2E Testing" and choose a browser.
 
@@ -314,11 +314,9 @@ Cypress was chosen for its unique features and benefits:
     - `Doctor_Register.cy.js`
     - `Patient_Register.cy.js`
 
----
+## Frontend Unit Testing
 
-# Frontend Unit Testing
-
-## Unit Tests Implementation
+### Unit Tests Implementation
 During Sprint 3, we implemented comprehensive unit tests for critical authentication components and key pages in the application using **React Testing Library** and **Jest**. These tests validate component rendering, user interactions, form validation, API integration, and navigation behavior.
 
 ## Test Framework Used
@@ -329,7 +327,7 @@ During Sprint 3, we implemented comprehensive unit tests for critical authentica
   - External API calls (e.g., `authService`, `appointmentService`, `profileService`) were isolated using `jest.mock()`.
 
 ## Tested Components
-### Authentication Pages
+### A. Authentication Pages
 #### **Patient Login Page (`LoginPage.test.jsx`)**
 - Verifies the presence of the login form and modal.
 - Simulates valid and invalid login attempts.
@@ -354,7 +352,7 @@ During Sprint 3, we implemented comprehensive unit tests for critical authentica
 - Tests both success and failure authentication scenarios.
 - Simulates redirection to the **doctor dashboard** upon successful login.
 
-### Appointment Management
+### B. Appointment Management
 #### **Make Appointments Page (`MakeAppointmentsPage.test.jsx`)**
 - Mocks API calls for:
   - Appointment list rendering.
@@ -371,7 +369,7 @@ During Sprint 3, we implemented comprehensive unit tests for critical authentica
   - Notes submission.
 - Tests conditional rendering and loading indicators.
 
-### Profile & Support Pages
+### C. Profile & Support Pages
 #### **Profile Display Page (`ProfileDisplay.test.jsx`)**
 - Validates personal, medical, and insurance detail forms.
 - Tests edit and save functionality.
@@ -386,7 +384,7 @@ During Sprint 3, we implemented comprehensive unit tests for critical authentica
 - Ensures password strength requirements are met.
 - Simulates user feedback via alerts or messages.
 
-### Dashboard
+### D. Dashboard
 #### **Dashboard Page (`Dashboard.test.jsx`)**
 - Ensures correct rendering of static content.
 - Mocks API calls and tests unauthorized access behavior.
@@ -410,15 +408,9 @@ During Sprint 3, we implemented comprehensive unit tests for critical authentica
    npm test -- --watchAll=false
    ```
 
-## Key Outcomes
+### Key Outcomes
 - Achieved **full unit test coverage** across the newly introduced or updated frontend components in this sprint.
 - Ensured all pages provide appropriate validation, visual feedback, and maintain consistency under different user scenarios.
 - Strengthened frontend reliability ahead of future feature enhancements or deployment.
-
-This rigorous testing ensures that our frontend is **robust, maintainable, and ready for production**.
-
-
-
-
-
+- This rigorous testing ensures that our frontend is **robust, maintainable, and ready for production**.
 
