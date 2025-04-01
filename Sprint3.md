@@ -207,7 +207,7 @@ To run the unit tests, follow these steps:
 # Sprint 3 Frontend Documentation
 ## Frontend Development
 
-### **Updated UI and Visual features in This Sprint**
+### **Updated UI and Visual features:**
 
 #### **Home Page**
 **Improved visual design & UI with better navigation and layout.**
@@ -235,14 +235,14 @@ To run the unit tests, follow these steps:
 - **Loading Spinner** – Visual feedback during submission.
 - **Secondary Action Links** – Styled "Forgot Password?" and "Request Access" options.
 
-#### **Contact**
+#### **Contact Page**
 - **Modern Form Design** – Filled inputs with rounded corners and focus glow.
 - **Interactive Elements** – Hover effects on contact cards and emergency alert.
 - **Enhanced Visuals** – Larger icons, gradient button, and consistent shadows.
 - **Smooth Animations** – Subtle transitions for buttons and cards.
 - **Polished Layout** – Better spacing, borders, and responsive typography.
 
-### **Patients Make Appoitment**
+#### **Patients Make Appoitment Page**
 - **Tab View** – Three Tabs for Scheduled, Cancelled and Booked Appointments.
 - **Smooth Animations** – Subtle transitions for buttons and cards.
 - **Interactive Elements** – Hover effects on book and upload button.
