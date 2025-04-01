@@ -346,6 +346,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {features.map((feature, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card 
+                  data-testid="feature-card" // Added test ID
                   sx={{ 
                     height: '70%',
                     p: 4,
@@ -583,6 +584,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {plans.map((plan, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <Card
+                  data-testid="pricing-card" // Added test ID
                   sx={{
                     height: '100%',
                     borderRadius: '16px',
@@ -746,6 +748,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {testimonials.map((testimonial, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <Card 
+                  data-testid="testimonial-card" // Added test ID
                   sx={{ 
                     height: '100%',
                     borderRadius: '16px',
@@ -878,6 +881,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
               </Typography>
               <Stack direction="row" spacing={2}>
                 <IconButton 
+                  aria-label="Facebook" // Added aria-label
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -892,6 +896,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Facebook />
                 </IconButton>
                 <IconButton 
+                  aria-label="Twitter" // Added aria-label
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -906,6 +911,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Twitter />
                 </IconButton>
                 <IconButton 
+                  aria-label="Instagram" // Added aria-label
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -920,6 +926,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Instagram />
                 </IconButton>
                 <IconButton 
+                  aria-label="LinkedIn" // Added aria-label
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -1117,4 +1124,3 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
     </Box>
   );
 }
-
