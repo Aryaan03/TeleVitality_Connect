@@ -1,148 +1,83 @@
-/// <reference types="cypress" />
-
-describe('Clinical Portal Authentication Validation', () => {
-  // Physician test credentials
+describe('Doctor Login Tests', () => {
   beforeEach(() => {
-    // Visit the application home page
-    cy.visit('/'); // Replace '/' with the actual URL of your app
+    cy.visit('/');
+    // Open login modal through navigation flow
+    cy.get('button').contains('Sign In').click();
+    // Wait for options modal to appear
+    cy.contains('Are you a healthcare provider?').should('be.visible');
+    // Select doctor login in options modal
+    cy.contains('Login here').click();
   });
 
-  const physicianCredentials = {
-    boardCertified: {
-      username: 'dr.smith@medicalcenter.org',
-      password: 'Secure$Pass2023'
-    },
-    resident: {
-      username: 'resident.johnson@training.hospital',
-      password: 'Temp@Access1'
-    }
-  };
-
-  before(() => {
-    cy.log('Initializing clinical portal authentication suite...');
-    cy.visit('/clinical-portal', { timeout: 15000 });
-    cy.wait(1800); 
+  it('should display doctor login form correctly', () => {
+    // Check modal content
+    cy.contains('Medical Professional Portal').should('be.visible');
+    cy.contains('Secure access to clinical tools and patient management').should('be.visible');
+    
+    // Check form fields
+    cy.get('input[name="username"]').should('exist');
+    cy.get('input[name="password"]').should('exist');
+    
+    // Check auxiliary elements
+    cy.contains('Forgot Password?').should('be.visible');
+    cy.contains('256-bit SSL encrypted connection').should('be.visible');
+    cy.contains('Request Access').should('be.visible');
   });
 
-  context('User Interface Verification', () => {
-    it('successfully loads the physician authentication portal', () => {
-      cy.then(() => {
-        cy.log('Validating portal interface components...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ HIPAA-compliant login interface rendered');
-            expect(true).to.be.true; 
-            resolve();
-          }, 1250); 
-        });
-      });
-    });
+  it('should show validation errors for empty fields', () => {
+    // Trigger validation
+    cy.get('input[name="username"]').focus().blur();
+    cy.get('input[name="password"]').focus().blur();
+    cy.get('button[type="submit"]').click();
 
-    it('displays all required security certifications', () => {
-      cy.then(() => {
-        cy.log('Auditing security compliance indicators...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ HITRUST CSF certified security badges verified');
-            expect(true).to.be.true;
-            resolve();
-          }, 950);
-        });
-      });
+    // Verify errors
+    cy.get('.MuiFormHelperText-root.Mui-error').should('have.length', 2);
+    cy.get('.MuiFormHelperText-root.Mui-error').each(($el) => {
+      expect($el.text()).to.include('Required');
     });
   });
 
-  context('Authentication Protocol Tests', () => {
-    it('enforces clinical credential requirements', () => {
-      cy.then(() => {
-        cy.log('Testing validation protocols...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Field validation meets Joint Commission standards');
-            expect(true).to.be.true;
-            resolve();
-          }, 1100);
-        });
-      });
-    });
+  it('should show error for invalid credentials', () => {
+    cy.intercept('POST', '/api/doclogin', {
+      statusCode: 401,
+      body: { message: 'Invalid credentials' },
+      delay: 500
+    }).as('loginRequest');
 
-    it('blocks unauthorized access attempts', () => {
-      cy.then(() => {
-        cy.log('Testing invalid credential rejection...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Security protocols prevented unauthorized access');
-            expect(true).to.be.true;
-            resolve();
-          }, 1650); 
-        });
-      });
+    // Fill form
+    cy.get('input[name="username"]').type('invaliduser');
+    cy.get('input[name="password"]').type('wrongpass');
+    cy.get('button[type="submit"]').click();
+
+    // Verify error
+    cy.wait('@loginRequest');
+    cy.contains(/login failed/i).should('be.visible');
+  });
+
+  it('should successfully login with valid credentials', () => {
+    cy.intercept('POST', '/api/doclogin', {
+      statusCode: 200,
+      body: { token: 'fake-jwt-token' },
+      delay: 500
+    }).as('loginRequest');
+
+    // Fill valid credentials
+    cy.get('input[name="username"]').type('validuser');
+    cy.get('input[name="password"]').type('correctpass');
+    cy.get('button[type="submit"]').click();
+
+    // Verify success
+    cy.wait('@loginRequest');
+    cy.url().should('include', '/doctor/profile');
+    cy.window().its('localStorage.token').should('exist');
+    cy.window().its('localStorage.role').should('eq', 'doctor');
+  });
+
+  it('should show forgot password alert when clicked', () => {
+    cy.contains('Forgot Password?').click();
+    cy.on('window:alert', (str) => {
+      expect(str).to.equal('Forgot Password clicked!');
     });
   });
 
-  context('Physician Workflow Validation', () => {
-    it('processes board-certified physician credentials', () => {
-      cy.then(() => {
-        cy.log('Validating attending physician workflow...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.window().then((win) => {
-              win.localStorage.setItem('physicianJWT', 'simulated_encrypted_token');
-              win.localStorage.setItem('privilegeLevel', 'attending');
-              cy.log('✓ OAuth 2.0 tokens established');
-            });
-            expect(true).to.be.true;
-            resolve();
-          }, 2100); 
-        });
-      });
-    });
-
-    it('navigates to clinical dashboard', () => {
-      cy.then(() => {
-        cy.log('Verifying post-authentication routing...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Successfully redirected to EPIC dashboard');
-            expect(true).to.be.true;
-            resolve();
-          }, 1400);
-        });
-      });
-    });
-  });
-
-  context('Compliance Assurance', () => {
-    it('maintains HIPAA encryption standards', () => {
-      cy.then(() => {
-        cy.log('Validating end-to-end encryption...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ 256-bit AES encryption confirmed');
-            expect(true).to.be.true;
-            resolve();
-          }, 850);
-        });
-      });
-    });
-
-    it('implements proper session security', () => {
-      cy.then(() => {
-        cy.log('Testing credential protection measures...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Secure session management verified');
-            expect(true).to.be.true;
-            resolve();
-          }, 750);
-        });
-      });
-    });
-  });
-
-  after(() => {
-    cy.log('Clinical authentication validation cycle complete');
-    cy.log('All protocols meet CMS security requirements');
-    expect(true).to.be.true; 
-  });
 });

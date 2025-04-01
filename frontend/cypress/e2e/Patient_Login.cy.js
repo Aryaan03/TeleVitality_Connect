@@ -1,148 +1,100 @@
-/// <reference types="cypress" />
-
-describe('Patient Portal Authentication Validation', () => {
-  // Patient test credentials
+describe('Patient Login Tests', () => {
   beforeEach(() => {
-    // Visit the application home page
-    cy.visit('/'); // Replace '/' with the actual URL of your app
+    cy.visit('/');
+    // Open login modal through navigation flow
+    cy.get('button').contains('Sign In').click({ force: true });
+    // Wait for options modal to appear
+    cy.contains('Are you a healthcare provider?', { timeout: 10000 }).should('be.visible');
+    // Select patient login in options modal
+    cy.contains('Patient Login').click({ force: true });
   });
 
-  const patientAccounts = {
-    verified: {
-      username: 'john.doe@patientportal.org',
-      password: 'SecureHealth123!'
-    },
-    unverified: {
-      username: 'temp_user@test.org',
-      password: 'TemporaryPass1'
-    }
-  };
-
-  before(() => {
-    cy.log('Initializing patient portal authentication suite...');
-    cy.visit('/health-portal', { timeout: 15000 });
-    cy.wait(1800); 
+  it('should display patient login form correctly', () => {
+    // Check modal content - increased timeout
+    cy.contains('Welcome Back', { timeout: 10000 }).should('be.visible');
+    cy.contains('Access your personalized health portal').should('be.visible');
+    
+    // Check form fields with more specific selectors
+    cy.get('input[name="username"]', { timeout: 10000 }).should('be.visible');
+    cy.get('input[name="password"]').should('be.visible');
+    
+    // Check auxiliary elements with more resilient selectors
+    cy.contains('button', 'Forgot Password?').should('be.visible');
+    cy.contains('button', 'Sign Up Now').should('be.visible');
+    cy.contains('256-bit SSL encrypted connection').should('be.visible');
   });
 
-  context('Patient Interface Verification', () => {
-    it('successfully loads the patient authentication portal', () => {
-      cy.then(() => {
-        cy.log('Validating patient portal components...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ HIPAA-compliant patient login interface rendered');
-            expect(true).to.be.true;
-            resolve();
-          }, 1200);
-        });
-      });
-    });
+  it('should show validation errors for empty fields', () => {
+    // Wait for form to be visible first
+    cy.get('form', { timeout: 10000 }).should('be.visible');
+    
+    // Trigger validation with more reliable sequence
+    cy.get('input[name="username"]').click().type('{backspace}');
+    cy.get('input[name="password"]').click().type('{backspace}');
+    cy.get('button[type="submit"]').click();
 
-    it('displays all required patient access elements', () => {
-      cy.then(() => {
-        cy.log('Checking patient-specific UI components...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Patient identification fields verified');
-            expect(true).to.be.true;
-            resolve();
-          }, 850);
-        });
+    // Verify errors with more specific selectors
+    cy.get('.MuiFormHelperText-root.Mui-error', { timeout: 5000 })
+      .should('have.length', 2)
+      .each(($el) => {
+        expect($el.text()).to.include('Required');
       });
-    });
   });
 
-  context('Authentication Protocol Tests', () => {
-    it('enforces patient credential requirements', () => {
-      cy.then(() => {
-        cy.log('Testing patient validation protocols...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Field validation meets healthcare standards');
-            expect(true).to.be.true;
-            resolve();
-          }, 1100);
-        });
-      });
-    });
+  it('should show error for invalid credentials', () => {
+    cy.intercept('POST', '/api/login', {
+      statusCode: 401,
+      body: { message: 'Invalid credentials' },
+      delay: 1000
+    }).as('loginRequest');
 
-    it('blocks unauthorized patient access attempts', () => {
-      cy.then(() => {
-        cy.log('Testing invalid patient credential rejection...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Security protocols prevented unauthorized patient access');
-            expect(true).to.be.true;
-            resolve();
-          }, 1600);
-        });
-      });
-    });
+    // Fill form with more reliable typing
+    cy.get('input[name="username"]').clear().type('invaliduser');
+    cy.get('input[name="password"]').clear().type('wrongpass');
+    cy.get('button[type="submit"]').click();
+
+    // Verify error with more flexible matching
+    cy.wait('@loginRequest', { timeout: 10000 });
+    cy.contains(/invalid credentials|login failed/i, { timeout: 5000 }).should('be.visible');
   });
 
-  context('Patient Workflow Validation', () => {
-    it('processes verified patient credentials', () => {
-      cy.then(() => {
-        cy.log('Validating registered patient workflow...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.window().then((win) => {
-              win.localStorage.setItem('patientToken', 'simulated_patient_jwt');
-              win.localStorage.setItem('patientRole', 'verified');
-              cy.log('✓ Patient authentication tokens established');
-            });
-            expect(true).to.be.true;
-            resolve();
-          }, 2000);
-        });
-      });
-    });
+  it('should successfully login with valid credentials', () => {
+    cy.intercept('POST', '/api/login', {
+      statusCode: 200,
+      body: { token: 'fake-jwt-token' },
+      delay: 1000
+    }).as('loginRequest');
 
-    it('navigates to patient health dashboard', () => {
-      cy.then(() => {
-        cy.log('Verifying patient post-authentication routing...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Successfully redirected to patient health portal');
-            expect(true).to.be.true;
-            resolve();
-          }, 1400);
-        });
-      });
+    // Fill valid credentials with more reliable selectors
+    cy.get('input[name="username"]').clear().type('validuser');
+    cy.get('input[name="password"]').clear().type('correctpass');
+    cy.get('button[type="submit"]').should('be.enabled').click();
+
+    // Verify success with more assertions
+    cy.wait('@loginRequest', { timeout: 10000 });
+    cy.url({ timeout: 10000 }).should('include', '/profile');
+    cy.window().then((win) => {
+      expect(win.localStorage.getItem('token')).to.exist;
+      expect(win.localStorage.getItem('role')).to.equal('patient');
     });
+    cy.contains('Welcome Back').should('not.exist');
   });
 
-  context('Patient Portal Security', () => {
-    it('maintains PHI protection standards', () => {
-      cy.then(() => {
-        cy.log('Validating patient data encryption...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ 256-bit PHI encryption confirmed');
-            expect(true).to.be.true;
-            resolve();
-          }, 900);
-        });
-      });
-    });
-
-    it('implements proper patient session timeout', () => {
-      cy.then(() => {
-        cy.log('Testing patient session security...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            cy.log('✓ Automatic session timeout configured');
-            expect(true).to.be.true;
-            resolve();
-          }, 750);
-        });
-      });
-    });
+  it('should navigate to forgot password page', () => {
+    // More reliable navigation test
+    cy.contains('button', 'Forgot Password?').click();
+    cy.url({ timeout: 10000 }).should('include', '/reset-password');
   });
 
-  after(() => {
-    cy.log('Patient portal authentication validation complete');
-    cy.log('All protocols meet HIPAA security requirements');
-    expect(true).to.be.true;
+  it('should navigate to sign up page', () => {
+    // More reliable navigation test
+    cy.contains('button', 'Sign Up Now').click();
+    cy.url({ timeout: 10000 }).should('include', '/register');
+  });
+
+  it('should close modal when clicking close button', () => {
+    // More reliable close button selector
+    cy.get('[data-testid="CloseIcon"]').first().click({ force: true });
+    cy.contains('Welcome Back', { timeout: 5000 }).should('not.exist');
   });
 });
