@@ -946,3 +946,48 @@ func TestGenerateMeetLink(t *testing.T) {
 		assert.True(t, validNouns[parts[1]], "Second part should be a valid noun")
 	}
 }
+
+func TestUpdateAppointmentNotes(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := AppointmentHandler{DB: db}
+
+	// Create a test request with appointment ID and notes
+	notes := "Test notes for appointment"
+	requestBody := map[string]string{"notes": notes}
+	jsonBody, _ := json.Marshal(requestBody)
+
+	// Set up the mock expectation
+	mock.ExpectExec("UPDATE appointments").
+		WithArgs(notes, "123").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Create a new request with the appointment ID in the URL
+	req := httptest.NewRequest("PUT", "/api/appointments/123/notes", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Set up the URL variables
+	vars := map[string]string{
+		"id": "123",
+	}
+	req = mux.SetURLVars(req, vars)
+
+	rec := httptest.NewRecorder()
+
+	handler.UpdateAppointmentNotes(rec, req)
+
+	// Check the response
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var response map[string]string
+	err = json.Unmarshal(rec.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "Notes updated successfully", response["message"])
+
+	// Verify that all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
