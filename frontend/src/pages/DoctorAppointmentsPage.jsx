@@ -415,7 +415,7 @@ export default function DoctorAppointmentsPage() {
                                 color={getStatusColor(appointment.status)}
                                 size="small"
                               />
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Button
                                   variant="contained"
                                   color="primary"
@@ -440,10 +440,10 @@ export default function DoctorAppointmentsPage() {
                         </IconButton>
                         <IconButton 
                           onClick={() => handleCancelClick(appointment.id)}
-                          disabled={appointment.status === 'Cancelled'}
+                          disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
                           title="Cancel appointment"
                         >
-                          <CancelIcon color={appointment.status === 'Cancelled' ? 'disabled' : 'error'} />
+                          <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
                         </IconButton>
                       </Box>
                     </ListItem>
@@ -596,7 +596,7 @@ export default function DoctorAppointmentsPage() {
                                 color={getStatusColor(appointment.status)}
                                 size="small"
                               />
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Button
                                   variant="contained"
                                   color="primary"
@@ -621,10 +621,10 @@ export default function DoctorAppointmentsPage() {
                         </IconButton>
                         <IconButton 
                           onClick={() => handleCancelClick(appointment.id)}
-                          disabled={appointment.status === 'Cancelled'}
+                          disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
                           title="Cancel appointment"
                         >
-                          <CancelIcon color={appointment.status === 'Cancelled' ? 'disabled' : 'error'} />
+                          <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
                         </IconButton>
                       </Box>
                     </ListItem>
@@ -777,7 +777,7 @@ export default function DoctorAppointmentsPage() {
                                 color={getStatusColor(appointment.status)}
                                 size="small"
                               />
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Button
                                   variant="contained"
                                   color="primary"
@@ -802,10 +802,10 @@ export default function DoctorAppointmentsPage() {
                         </IconButton>
                         <IconButton 
                           onClick={() => handleCancelClick(appointment.id)}
-                          disabled={appointment.status === 'Cancelled'}
+                          disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
                           title="Cancel appointment"
                         >
-                          <CancelIcon color={appointment.status === 'Cancelled' ? 'disabled' : 'error'} />
+                          <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
                         </IconButton>
                       </Box>
                     </ListItem>

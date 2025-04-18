@@ -990,7 +990,7 @@ export default function AppointmentsPage() {
                                 </Box>
                               )}
 
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Button
                                     variant="contained"
@@ -1129,7 +1129,7 @@ export default function AppointmentsPage() {
                                 </Box>
                               )}
 
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Button
                                     variant="contained"
@@ -1268,7 +1268,7 @@ export default function AppointmentsPage() {
                                 </Box>
                               )}
 
-                              {appointment.meet_link && (
+                              {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Button
                                     variant="contained"
