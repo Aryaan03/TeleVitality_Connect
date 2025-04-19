@@ -146,6 +146,17 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
     handleProfileMenuClose();
   };
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 100,
+        behavior: 'smooth'
+      });
+    }
+    handleMobileMenuClose();
+  };
+
   return (
     <Box sx={{ flexGrow: 1, fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
       <AppBar 
@@ -192,60 +203,136 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
               gap: 2,
               alignItems: 'center'
             }}>
-              {!isLoggedIn && (
-                <Button
-                  component={Link}
-                  to="/"
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                    fontSize: '0.95rem',
-                    px: 2,
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: 'rgba(20, 126, 255, 0.05)'
-                    }
-                  }}
-                >
-                  Home
-                </Button>
+              {!isLoggedIn ? (
+                <>
+                  <Button
+                    onClick={() => scrollToSection('top')}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Home
+                  </Button>
+                  <Button
+                    onClick={() => scrollToSection('features')}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Features
+                  </Button>
+                  <Button
+                    onClick={() => scrollToSection('process')}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    How It Works
+                  </Button>
+                  <Button
+                    onClick={() => scrollToSection('pricing')}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Pricing
+                  </Button>
+                  <Button
+                    onClick={() => scrollToSection('testimonials')}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Testimonials
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/contact"
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Contact
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    component={Link}
+                    to={role === "doctor" ? "/doctor-appointments" : "/appointments"}
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Appointments
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/contact"
+                    sx={{
+                      color: 'text.primary',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 2,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'rgba(20, 126, 255, 0.05)'
+                      }
+                    }}
+                  >
+                    Contact
+                  </Button>
+                </>
               )}
-              
-              {isLoggedIn && (
-                <Button
-                  component={Link}
-                  to={role === "doctor" ? "/doctor-appointments" : "/appointments"}
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                    fontSize: '0.95rem',
-                    px: 2,
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: 'rgba(20, 126, 255, 0.05)'
-                    }
-                  }}
-                >
-                  Appointments
-                </Button>
-              )}
-
-              <Button
-                component={Link}
-                to="/contact"
-                sx={{
-                  color: 'text.primary',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  px: 2,
-                  '&:hover': {
-                    color: 'primary.main',
-                    backgroundColor: 'rgba(20, 126, 255, 0.05)'
-                  }
-                }}
-              >
-                Contact
-              </Button>
             </Box>
 
             {/* Right-side Actions */}
@@ -383,33 +470,49 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
           }
         }}
       >
-        {!isLoggedIn && (
-          <MenuItem 
-            component={Link} 
-            to="/" 
-            onClick={handleMobileMenuClose}
-          >
-            <Home sx={{ mr: 1.5 }} /> Home
-          </MenuItem>
+        {!isLoggedIn ? (
+          <>
+            <MenuItem onClick={() => scrollToSection('top')}>
+              <Home sx={{ mr: 1.5 }} /> Home
+            </MenuItem>
+            <MenuItem onClick={() => scrollToSection('features')}>
+              Features
+            </MenuItem>
+            <MenuItem onClick={() => scrollToSection('process')}>
+              How It Works
+            </MenuItem>
+            <MenuItem onClick={() => scrollToSection('pricing')}>
+              Pricing
+            </MenuItem>
+            <MenuItem onClick={() => scrollToSection('testimonials')}>
+              Testimonials
+            </MenuItem>
+            <MenuItem 
+              component={Link} 
+              to="/contact" 
+              onClick={handleMobileMenuClose}
+            >
+              <ContactMail sx={{ mr: 1.5 }} /> Contact
+            </MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem 
+              component={Link} 
+              to={role === "doctor" ? "/doctor-appointments" : "/appointments"} 
+              onClick={handleMobileMenuClose}
+            >
+              <CalendarToday sx={{ mr: 1.5 }} /> Appointments
+            </MenuItem>
+            <MenuItem 
+              component={Link} 
+              to="/contact" 
+              onClick={handleMobileMenuClose}
+            >
+              <ContactMail sx={{ mr: 1.5 }} /> Contact
+            </MenuItem>
+          </>
         )}
-        
-        {isLoggedIn && (
-          <MenuItem 
-            component={Link} 
-            to={role === "doctor" ? "/doctor-appointments" : "/appointments"} 
-            onClick={handleMobileMenuClose}
-          >
-            <CalendarToday sx={{ mr: 1.5 }} /> Appointments
-          </MenuItem>
-        )}
-        
-        <MenuItem 
-          component={Link} 
-          to="/contact" 
-          onClick={handleMobileMenuClose}
-        >
-          <ContactMail sx={{ mr: 1.5 }} /> Contact
-        </MenuItem>
         
         {!isLoggedIn && (
           <>
@@ -438,7 +541,7 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
         )}
       </Menu>
 
-      {/* Add Notification Menu */}
+      {/* Notification Menu */}
       <Menu
         anchorEl={notificationMenuAnchor}
         open={Boolean(notificationMenuAnchor)}

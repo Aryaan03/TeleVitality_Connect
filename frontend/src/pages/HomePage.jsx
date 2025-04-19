@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   Button, Container, Typography, Box, Grid, Card, CardContent, TextField, 
   Avatar, List, ListItem, ListItemText, Stack, IconButton, Divider,
@@ -42,6 +42,20 @@ const gradientBackground = keyframes`
 `;
 
 export default function HomePage({ onGetStartedClick, onLoginClick }) {
+  // Create refs for each section
+  const topRef = useRef(null);
+  const featuresRef = useRef(null);
+  const processRef = useRef(null);
+  const pricingRef = useRef(null);
+  const testimonialsRef = useRef(null);
+
+  const scrollToRef = (ref) => {
+    window.scrollTo({
+      top: ref.current.offsetTop - 100,
+      behavior: 'smooth'
+    });
+  };
+
   // Testimonials data with updated ratings
   const testimonials = [
     {
@@ -164,7 +178,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       overflowX: 'hidden'
     }}>
       {/* Hero Section */}
-      <Box sx={{ 
+      <Box ref={topRef} id="top" sx={{ 
         position: 'relative',
         background: 'linear-gradient(135deg, #147EFF 0%, #0E5FD9 100%)',
         color: 'white',
@@ -305,7 +319,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Container>
 
       {/* Why Choose Us Section */}
-      <Box id="features" sx={{ py: 12 }}>
+      <Box ref={featuresRef} id="features" sx={{ py: 12 }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 10 }}>
             <Typography 
@@ -346,7 +360,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {features.map((feature, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card 
-                  data-testid="feature-card" // Added test ID
+                  data-testid="feature-card"
                   sx={{ 
                     height: '70%',
                     p: 4,
@@ -390,7 +404,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* How It Works */}
-      <Box sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
+      <Box ref={processRef} id="process" sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -532,7 +546,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* Pricing Section */}
-      <Box id="pricing" sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
+      <Box ref={pricingRef} id="pricing" sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -584,7 +598,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {plans.map((plan, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <Card
-                  data-testid="pricing-card" // Added test ID
+                  data-testid="pricing-card"
                   sx={{
                     height: '100%',
                     borderRadius: '16px',
@@ -699,7 +713,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* Testimonials */}
-      <Box id="testimonials" sx={{ py: 12, position: 'relative' }}>
+      <Box ref={testimonialsRef} id="testimonials" sx={{ py: 12, position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -748,7 +762,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
             {testimonials.map((testimonial, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <Card 
-                  data-testid="testimonial-card" // Added test ID
+                  data-testid="testimonial-card"
                   sx={{ 
                     height: '100%',
                     borderRadius: '16px',
@@ -881,7 +895,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
               </Typography>
               <Stack direction="row" spacing={2}>
                 <IconButton 
-                  aria-label="Facebook" // Added aria-label
+                  aria-label="Facebook"
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -896,7 +910,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Facebook />
                 </IconButton>
                 <IconButton 
-                  aria-label="Twitter" // Added aria-label
+                  aria-label="Twitter"
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -911,7 +925,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Twitter />
                 </IconButton>
                 <IconButton 
-                  aria-label="Instagram" // Added aria-label
+                  aria-label="Instagram"
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
@@ -926,7 +940,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   <Instagram />
                 </IconButton>
                 <IconButton 
-                  aria-label="LinkedIn" // Added aria-label
+                  aria-label="LinkedIn"
                   sx={{ 
                     color: 'white', 
                     opacity: 0.7, 
