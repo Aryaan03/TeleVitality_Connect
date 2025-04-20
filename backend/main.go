@@ -5,16 +5,24 @@ import (
 	"backend/handlers"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	db := config.ConnectDB()
 	defer db.Close()
 
-	authHandler := &handlers.AuthHandler{DB: db}
+	authHandler := &handlers.AuthHandler{DB: db, SendGridKey: os.Getenv("SENDGRID_API_KEY")}
 	profileHandler := &handlers.ProfileHandler{DB: db}
 	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db}
 	appointmentHandler := &handlers.AppointmentHandler{DB: db}
@@ -24,6 +32,8 @@ func main() {
 	// Public Routes
 	r.HandleFunc("/api/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/api/login", authHandler.Login).Methods("POST")
+	r.HandleFunc("/api/send-code", authHandler.SendResetCode).Methods("POST")
+	r.HandleFunc("/api/verify-code", authHandler.VerifyResetCode).Methods("POST")
 	r.HandleFunc("/api/reset-password", authHandler.ResetPassword).Methods("POST")
 
 	r.HandleFunc("/api/docregister", authHandler.DoctorRegister).Methods("POST")

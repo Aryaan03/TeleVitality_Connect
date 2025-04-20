@@ -248,4 +248,33 @@ export const authService = {
       throw new Error(error.message);
     }
   },
+  async forgotPassword({ email }) {
+    const response = await fetch(`${API_URL}/send-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+  },
+
+  async verifyResetCode({ email, code }) {
+    const response = await fetch(`${API_URL}/verify-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+  },
+
+  async resetPassword({ reset_token, new_password }) {
+    const response = await fetch(`${API_URL}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reset_token, new_password }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+  }
 };

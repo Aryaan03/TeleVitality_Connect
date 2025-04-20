@@ -17,9 +17,13 @@ import { useState } from 'react';
 import { authService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-export default function LoginPage({ open, handleClose }) {
+export default function LoginPage({ open, handleClose, openForgotPassword }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const handleForgotPassword = () => {
+    handleClose();
+    openForgotPassword();
+  };
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -204,7 +208,7 @@ export default function LoginPage({ open, handleClose }) {
                         textDecoration: 'underline'
                       }
                     }}
-                    onClick={() => navigate('/reset-password')}
+                    onClick={() => handleForgotPassword()}
                   >
                     Forgot Password?
                   </Button>

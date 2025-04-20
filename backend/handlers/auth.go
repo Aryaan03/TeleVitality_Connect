@@ -5,16 +5,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
-	DB *sql.DB
+	DB          *sql.DB
+	SendGridKey string
 }
 
 var jwtSecret = []byte("ThisIsASecretKey")
@@ -182,44 +186,6 @@ func JWTAuthMiddleware(allowedRoles ...string) func(http.Handler) http.Handler {
 	}
 }
 
-func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
-	var resetData struct {
-		Email       string `json:"email"`
-		NewPassword string `json:"newPassword"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&resetData); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// check if user already exists
-	var exists bool
-	err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)", resetData.Email).Scan(&exists)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if !exists {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(resetData.NewPassword), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = h.DB.Exec("UPDATE users SET password_hash = $1 WHERE email = $2", hashedPassword, resetData.Email)
-	if err != nil {
-		http.Error(w, "Error updating password", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Password reset successfully"})
-}
-
 func (h *AuthHandler) ProtectedDashboard(w http.ResponseWriter, r *http.Request) {
 	// Extract token from the Authorization header
 	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
@@ -352,4 +318,176 @@ func (h *AuthHandler) DoctorRegister(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User created successfully"})
+}
+
+func (h *AuthHandler) SendResetCode(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Generate 6-digit code (fixed version)
+	codeStr := fmt.Sprintf("%06d", rand.Intn(1000000))
+
+	//Generated code expires in 10 minutes
+	_, err := h.DB.Exec(
+		`INSERT INTO password_reset_codes (email, code, expires_at)
+		 VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '10 minutes')
+		 ON CONFLICT (email) DO UPDATE
+		 SET code = $2, expires_at = CURRENT_TIMESTAMP + INTERVAL '10 minutes'`,
+		req.Email, codeStr,
+	)
+
+	if err != nil {
+		http.Error(w, `{"error":"Database operation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	from := mail.NewEmail("TeleVitality", "potamsetvssruchi@ufl.edu")
+	to := mail.NewEmail("", req.Email)
+	message := mail.NewSingleEmail(
+		from,
+		"Password Reset Code",
+		to,
+		fmt.Sprintf("Your verification code is: %s", codeStr),
+		"",
+	)
+
+	client := sendgrid.NewSendClient(h.SendGridKey)
+	if _, err := client.Send(message); err != nil {
+		http.Error(w, `{"error":"Failed sending email"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Code sent"})
+}
+
+func (h *AuthHandler) VerifyResetCode(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	var storedCode string
+	var expiresAt time.Time
+	err := h.DB.QueryRow(
+		`SELECT code, expires_at  
+	     FROM password_reset_codes 
+	     WHERE email = $1`,
+		req.Email,
+	).Scan(&storedCode, &expiresAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, `{"error":"No code found for email"}`, http.StatusUnauthorized)
+		} else {
+			http.Error(w, `{"error":"Database error"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if time.Now().UTC().After(expiresAt.UTC()) {
+		http.Error(w, `{"error":"Expired code"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if storedCode != req.Code {
+		http.Error(w, `{"error":"Invalid code"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Generate time-limited reset token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": req.Email,
+		"exp":   time.Now().Add(10 * time.Minute).Unix(),
+		"scope": "password_reset",
+	})
+
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		http.Error(w, `{"error":"Token generation failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// Clear used code
+	_, err = h.DB.Exec(`DELETE FROM password_reset_codes WHERE email = $1`, req.Email)
+	if err != nil {
+		http.Error(w, `{"error":"Failed to clear reset code"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"reset_token": tokenString,
+	})
+}
+
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ResetToken  string `json:"reset_token"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Validate JWT token
+	token, err := jwt.Parse(req.ResetToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, `{"error":"Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["scope"] != "password_reset" {
+		http.Error(w, `{"error":"Invalid token claims"}`, http.StatusUnauthorized)
+		return
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok || email == "" {
+		http.Error(w, `{"error":"Invalid email in token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Update password
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, `{"error":"Password hashing failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.DB.Exec(
+		`UPDATE users 
+         SET password_hash = $1 
+         WHERE email = $2`,
+		hashedPass, email,
+	)
+	if err != nil {
+		http.Error(w, `{"error":"Password update failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Password updated successfully",
+	})
 }

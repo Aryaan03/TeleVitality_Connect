@@ -24,6 +24,7 @@ function App() {
   const [isDoctorRegisterOpen, setIsDoctorRegisterOpen] = useState(false);
   const [isPatientLoginOpen, setIsPatientLoginOpen] = useState(false);
   const [isDoctorLoginOpen, setIsDoctorLoginOpen] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
 
   const handleLoginOpen = () => setIsLoginOpen(true);
   const handleLoginClose = () => setIsLoginOpen(false);
@@ -35,6 +36,7 @@ function App() {
 
   const handlePatientLoginClose = () => setIsPatientLoginOpen(false);
   const handleDoctorLoginClose = () => setIsDoctorLoginOpen(false);
+  const handleForgotPasswordClose = () => setForgotPassword(false);
 
   return (
     <BrowserRouter>
@@ -118,6 +120,7 @@ function App() {
         <LoginPage 
           open={isPatientLoginOpen} 
           handleClose={handlePatientLoginClose} 
+          openForgotPassword={() => setForgotPassword(true)}
         />
       )}
 
@@ -125,6 +128,14 @@ function App() {
         <DoctorLoginPage 
           open={isDoctorLoginOpen} 
           handleClose={handleDoctorLoginClose} 
+        />
+      )}
+
+      {forgotPassword && (
+        <ForgotPassword
+          open={forgotPassword}
+          handleClose={handleForgotPasswordClose}
+          openLogin={() => setIsPatientLoginOpen(true)}
         />
       )}
     </BrowserRouter>
