@@ -21,7 +21,9 @@ import {
   Collapse,
   Grid,
   Tabs,
-  Tab
+  Tab,
+  Container,
+  useTheme
 } from '@mui/material';
 import { 
   Cancel as CancelIcon, 
@@ -30,11 +32,15 @@ import {
   ExpandMore as ExpandMoreIcon,
   AttachFile as AttachFileIcon,
   Edit as EditIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  MedicalServices as MedicalServicesIcon,
+  CheckCircle as CheckCircleIcon,
+  ScheduleSend as ScheduleSendIcon
 } from '@mui/icons-material';
 import { appointmentService } from '../services/appointmentService';
 
 export default function DoctorAppointmentsPage() {
+  const theme = useTheme();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -168,9 +174,18 @@ export default function DoctorAppointmentsPage() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Cancelled': return 'error';
-      case 'Scheduled': return 'success';
-      case 'Completed': return 'primary';
+      case 'Scheduled': return 'primary';
+      case 'Completed': return 'success';
       default: return 'default';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Cancelled': return <CancelIcon color="error" />;
+      case 'Scheduled': return <ScheduleSendIcon color="primary" />;
+      case 'Completed': return <CheckCircleIcon color="success" />;
+      default: return <CheckCircleIcon />;
     }
   };
 
@@ -188,7 +203,6 @@ export default function DoctorAppointmentsPage() {
 
   const handlePreviewFile = (file) => {
     const fileType = file.file_type || 'application/octet-stream';
-    // Convert base64 to blob
     const byteCharacters = atob(file.base64_data);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -273,14 +287,29 @@ export default function DoctorAppointmentsPage() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, margin: 'auto', p: 3 }}>
-      <Typography variant="h3" gutterBottom sx={{ 
-        fontWeight: 'bold',
-        color: 'primary.main',
-        mb: 4
-      }}>
-        Scheduled Appointments
-      </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
+        <Avatar sx={{ 
+          bgcolor: 'primary.main', 
+          width: 56, 
+          height: 56,
+          fontSize: '1.5rem'
+        }}>
+          <MedicalServicesIcon fontSize="large" />
+        </Avatar>
+        <Box>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 'bold', 
+            color: 'primary.main',
+            lineHeight: 1.2
+          }}>
+            Doctor Appointments
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Manage your patient appointments
+          </Typography>
+        </Box>
+      </Box>
 
       {loading && (
         <Box display="flex" justifyContent="center" my={4}>
@@ -310,7 +339,7 @@ export default function DoctorAppointmentsPage() {
               borderColor: 'divider',
               mb: 3,
               '& .MuiTabs-indicator': {
-                backgroundColor: 'primary.main',
+                backgroundColor: theme.palette.primary.main,
                 height: 3,
               },
             }}
@@ -318,29 +347,10 @@ export default function DoctorAppointmentsPage() {
             <Tab 
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ScheduleSendIcon fontSize="small" />
                   Scheduled
                   <Chip 
                     label={groupedAppointments['Scheduled']?.length || 0} 
-                    size="small" 
-                    color="success"
-                    sx={{ ml: 1 }}
-                  />
-                </Box>
-              }
-              sx={{ 
-                color: 'success.main',
-                '&.Mui-selected': {
-                  color: 'success.main',
-                  fontWeight: 'bold',
-                }
-              }}
-            />
-            <Tab 
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Completed
-                  <Chip 
-                    label={groupedAppointments['Completed']?.length || 0} 
                     size="small" 
                     color="primary"
                     sx={{ ml: 1 }}
@@ -348,7 +358,7 @@ export default function DoctorAppointmentsPage() {
                 </Box>
               }
               sx={{ 
-                color: 'primary.main',
+                textTransform: 'none',
                 '&.Mui-selected': {
                   color: 'primary.main',
                   fontWeight: 'bold',
@@ -358,6 +368,28 @@ export default function DoctorAppointmentsPage() {
             <Tab 
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircleIcon fontSize="small" />
+                  Completed
+                  <Chip 
+                    label={groupedAppointments['Completed']?.length || 0} 
+                    size="small" 
+                    color="success"
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              }
+              sx={{ 
+                textTransform: 'none',
+                '&.Mui-selected': {
+                  color: 'success.main',
+                  fontWeight: 'bold',
+                }
+              }}
+            />
+            <Tab 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CancelIcon fontSize="small" />
                   Cancelled
                   <Chip 
                     label={groupedAppointments['Cancelled']?.length || 0} 
@@ -368,7 +400,7 @@ export default function DoctorAppointmentsPage() {
                 </Box>
               }
               sx={{ 
-                color: 'error.main',
+                textTransform: 'none',
                 '&.Mui-selected': {
                   color: 'error.main',
                   fontWeight: 'bold',
@@ -381,7 +413,7 @@ export default function DoctorAppointmentsPage() {
             {appointmentStatusTab === 0 && (
               <List>
                 {groupedAppointments['Scheduled']?.map((appointment) => (
-                  <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                  <Paper key={appointment.id} elevation={3} sx={{ mb: 3, borderRadius: 2 }}>
                     <ListItem>
                       <ListItemText
                         primary={
@@ -404,16 +436,12 @@ export default function DoctorAppointmentsPage() {
                             <Typography variant="body1" sx={{ mb: 1 }}>
                               <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                             </Typography>
-                            {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
-                              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-                                <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
-                              </Typography>
-                            )}
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
                               <Chip 
                                 label={appointment.status || 'Scheduled'} 
                                 color={getStatusColor(appointment.status)}
                                 size="small"
+                                icon={getStatusIcon(appointment.status)}
                               />
                               {appointment.meet_link && appointment.status === 'Scheduled' && (
                                 <Button
@@ -424,7 +452,7 @@ export default function DoctorAppointmentsPage() {
                                   target="_blank"
                                   size="small"
                                 >
-                                  Join Video Consultation
+                                  Join Consultation
                                 </Button>
                               )}
                             </Box>
@@ -441,7 +469,6 @@ export default function DoctorAppointmentsPage() {
                         <IconButton 
                           onClick={() => handleCancelClick(appointment.id)}
                           disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
-                          title="Cancel appointment"
                         >
                           <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
                         </IconButton>
@@ -450,12 +477,12 @@ export default function DoctorAppointmentsPage() {
 
                     <Collapse in={expandedAppointments.has(appointment.id)}>
                       <Divider />
-                      <Box sx={{ p: 2 }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
+                      <Box sx={{ p: 3 }}>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
                             {appointment.files && appointment.files.length > 0 && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <AttachFileIcon /> Patient's Medical Reports
                                 </Typography>
                                 <List>
@@ -512,10 +539,10 @@ export default function DoctorAppointmentsPage() {
                               </Box>
                             )}
                           </Grid>
-                          <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                               <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                                Notes:
+                                Doctor's Notes:
                               </Typography>
                               {isAppointmentEnded(appointment.appointment_time) && (
                                 <IconButton 
@@ -527,26 +554,38 @@ export default function DoctorAppointmentsPage() {
                               )}
                             </Box>
                             {showNotesField[appointment.id] ? (
-                              <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
                                 <TextField
                                   fullWidth
                                   multiline
-                                  rows={3}
+                                  rows={4}
                                   value={notes[appointment.id] || ''}
                                   onChange={(e) => setNotes(prev => ({ ...prev, [appointment.id]: e.target.value }))}
                                   size="small"
                                 />
-                                <Button
-                                  variant="contained"
-                                  startIcon={<SaveIcon />}
-                                  onClick={() => handleSaveNotes(appointment.id)}
-                                  sx={{ alignSelf: 'flex-start' }}
-                                >
-                                  Save
-                                </Button>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                  <Button
+                                    variant="outlined"
+                                    onClick={() => setShowNotesField(prev => ({ ...prev, [appointment.id]: false }))}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    variant="contained"
+                                    startIcon={<SaveIcon />}
+                                    onClick={() => handleSaveNotes(appointment.id)}
+                                  >
+                                    Save Notes
+                                  </Button>
+                                </Box>
                               </Box>
                             ) : (
-                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                              <Typography variant="body2" sx={{ 
+                                whiteSpace: 'pre-wrap',
+                                p: 2,
+                                backgroundColor: theme.palette.grey[100],
+                                borderRadius: 1
+                              }}>
                                 {appointment.notes || 'No notes available'}
                               </Typography>
                             )}
@@ -562,12 +601,12 @@ export default function DoctorAppointmentsPage() {
             {appointmentStatusTab === 1 && (
               <List>
                 {groupedAppointments['Completed']?.map((appointment) => (
-                  <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                  <Paper key={appointment.id} elevation={3} sx={{ mb: 3, borderRadius: 2 }}>
                     <ListItem>
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                            <Avatar sx={{ bgcolor: 'success.main' }}>
                               {appointment.patient_name ? appointment.patient_name[0] : 'P'}
                             </Avatar>
                             <Box>
@@ -585,58 +624,33 @@ export default function DoctorAppointmentsPage() {
                             <Typography variant="body1" sx={{ mb: 1 }}>
                               <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                             </Typography>
-                            {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
-                              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-                                <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
-                              </Typography>
-                            )}
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
                               <Chip 
-                                label={appointment.status || 'Scheduled'} 
+                                label={appointment.status || 'Completed'} 
                                 color={getStatusColor(appointment.status)}
                                 size="small"
+                                icon={getStatusIcon(appointment.status)}
                               />
-                              {appointment.meet_link && appointment.status === 'Scheduled' && (
-                                <Button
-                                  variant="contained"
-                                  color="primary"
-                                  startIcon={<VideocamIcon />}
-                                  href={appointment.meet_link}
-                                  target="_blank"
-                                  size="small"
-                                >
-                                  Join Video Consultation
-                                </Button>
-                              )}
                             </Box>
                           </Box>
                         }
                       />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
-                          <ExpandMoreIcon sx={{
-                            transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
-                            transition: 'transform 0.3s'
-                          }} />
-                        </IconButton>
-                        <IconButton 
-                          onClick={() => handleCancelClick(appointment.id)}
-                          disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
-                          title="Cancel appointment"
-                        >
-                          <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
-                        </IconButton>
-                      </Box>
+                      <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                        <ExpandMoreIcon sx={{
+                          transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.3s'
+                        }} />
+                      </IconButton>
                     </ListItem>
 
                     <Collapse in={expandedAppointments.has(appointment.id)}>
                       <Divider />
-                      <Box sx={{ p: 2 }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
+                      <Box sx={{ p: 3 }}>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
                             {appointment.files && appointment.files.length > 0 && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <AttachFileIcon /> Patient's Medical Reports
                                 </Typography>
                                 <List>
@@ -693,44 +707,18 @@ export default function DoctorAppointmentsPage() {
                               </Box>
                             )}
                           </Grid>
-                          <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                              <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                                Notes:
-                              </Typography>
-                              {isAppointmentEnded(appointment.appointment_time) && (
-                                <IconButton 
-                                  size="small" 
-                                  onClick={() => setShowNotesField(prev => ({ ...prev, [appointment.id]: true }))}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              )}
-                            </Box>
-                            {showNotesField[appointment.id] ? (
-                              <Box sx={{ display: 'flex', gap: 1 }}>
-                                <TextField
-                                  fullWidth
-                                  multiline
-                                  rows={3}
-                                  value={notes[appointment.id] || ''}
-                                  onChange={(e) => setNotes(prev => ({ ...prev, [appointment.id]: e.target.value }))}
-                                  size="small"
-                                />
-                                <Button
-                                  variant="contained"
-                                  startIcon={<SaveIcon />}
-                                  onClick={() => handleSaveNotes(appointment.id)}
-                                  sx={{ alignSelf: 'flex-start' }}
-                                >
-                                  Save
-                                </Button>
-                              </Box>
-                            ) : (
-                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                                {appointment.notes || 'No notes available'}
-                              </Typography>
-                            )}
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2 }}>
+                              Doctor's Notes:
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              whiteSpace: 'pre-wrap',
+                              p: 2,
+                              backgroundColor: theme.palette.grey[100],
+                              borderRadius: 1
+                            }}>
+                              {appointment.notes || 'No notes available'}
+                            </Typography>
                           </Grid>
                         </Grid>
                       </Box>
@@ -743,12 +731,12 @@ export default function DoctorAppointmentsPage() {
             {appointmentStatusTab === 2 && (
               <List>
                 {groupedAppointments['Cancelled']?.map((appointment) => (
-                  <Paper key={appointment.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+                  <Paper key={appointment.id} elevation={3} sx={{ mb: 3, borderRadius: 2 }}>
                     <ListItem>
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                            <Avatar sx={{ bgcolor: 'error.main' }}>
                               {appointment.patient_name ? appointment.patient_name[0] : 'P'}
                             </Avatar>
                             <Box>
@@ -766,58 +754,38 @@ export default function DoctorAppointmentsPage() {
                             <Typography variant="body1" sx={{ mb: 1 }}>
                               <strong>Problem:</strong> {appointment.problem_description || 'Not specified'}
                             </Typography>
-                            {appointment.status === 'Cancelled' && appointment.cancellation_reason && (
-                              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                            {appointment.cancellation_reason && (
+                              <Typography variant="body2" color="error" sx={{ mb: 1 }}>
                                 <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
                               </Typography>
                             )}
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
                               <Chip 
-                                label={appointment.status || 'Scheduled'} 
+                                label={appointment.status || 'Cancelled'} 
                                 color={getStatusColor(appointment.status)}
                                 size="small"
+                                icon={getStatusIcon(appointment.status)}
                               />
-                              {appointment.meet_link && appointment.status === 'Scheduled' && (
-                                <Button
-                                  variant="contained"
-                                  color="primary"
-                                  startIcon={<VideocamIcon />}
-                                  href={appointment.meet_link}
-                                  target="_blank"
-                                  size="small"
-                                >
-                                  Join Video Consultation
-                                </Button>
-                              )}
                             </Box>
                           </Box>
                         }
                       />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
-                          <ExpandMoreIcon sx={{
-                            transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
-                            transition: 'transform 0.3s'
-                          }} />
-                        </IconButton>
-                        <IconButton 
-                          onClick={() => handleCancelClick(appointment.id)}
-                          disabled={appointment.status === 'Cancelled' || appointment.status === 'Completed'}
-                          title="Cancel appointment"
-                        >
-                          <CancelIcon color={appointment.status === 'Cancelled' || appointment.status === 'Completed' ? 'disabled' : 'error'} />
-                        </IconButton>
-                      </Box>
+                      <IconButton onClick={() => toggleAppointmentDetails(appointment.id)}>
+                        <ExpandMoreIcon sx={{
+                          transform: expandedAppointments.has(appointment.id) ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.3s'
+                        }} />
+                      </IconButton>
                     </ListItem>
 
                     <Collapse in={expandedAppointments.has(appointment.id)}>
                       <Divider />
-                      <Box sx={{ p: 2 }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
+                      <Box sx={{ p: 3 }}>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
                             {appointment.files && appointment.files.length > 0 && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <AttachFileIcon /> Patient's Medical Reports
                                 </Typography>
                                 <List>
@@ -874,44 +842,18 @@ export default function DoctorAppointmentsPage() {
                               </Box>
                             )}
                           </Grid>
-                          <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                              <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                                Notes:
-                              </Typography>
-                              {isAppointmentEnded(appointment.appointment_time) && (
-                                <IconButton 
-                                  size="small" 
-                                  onClick={() => setShowNotesField(prev => ({ ...prev, [appointment.id]: true }))}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              )}
-                            </Box>
-                            {showNotesField[appointment.id] ? (
-                              <Box sx={{ display: 'flex', gap: 1 }}>
-                                <TextField
-                                  fullWidth
-                                  multiline
-                                  rows={3}
-                                  value={notes[appointment.id] || ''}
-                                  onChange={(e) => setNotes(prev => ({ ...prev, [appointment.id]: e.target.value }))}
-                                  size="small"
-                                />
-                                <Button
-                                  variant="contained"
-                                  startIcon={<SaveIcon />}
-                                  onClick={() => handleSaveNotes(appointment.id)}
-                                  sx={{ alignSelf: 'flex-start' }}
-                                >
-                                  Save
-                                </Button>
-                              </Box>
-                            ) : (
-                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                                {appointment.notes || 'No notes available'}
-                              </Typography>
-                            )}
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2 }}>
+                              Doctor's Notes:
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              whiteSpace: 'pre-wrap',
+                              p: 2,
+                              backgroundColor: theme.palette.grey[100],
+                              borderRadius: 1
+                            }}>
+                              {appointment.notes || 'No notes available'}
+                            </Typography>
                           </Grid>
                         </Grid>
                       </Box>
@@ -953,6 +895,6 @@ export default function DoctorAppointmentsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 }

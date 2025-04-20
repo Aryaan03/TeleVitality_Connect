@@ -146,13 +146,33 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
     handleProfileMenuClose();
   };
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
+  const handleHomeClick = () => {
+    // If already on home page, scroll to top
+    if (window.location.pathname === '/') {
       window.scrollTo({
-        top: element.offsetTop - 100,
+        top: 0,
         behavior: 'smooth'
       });
+    } else {
+      // Otherwise navigate to home
+      navigate('/');
+    }
+    handleMobileMenuClose();
+  };
+
+  const scrollToSection = (sectionId) => {
+    // Only scroll if we're already on the home page
+    if (window.location.pathname === '/') {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        window.scrollTo({
+          top: element.offsetTop - 100,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      // If not on home page, navigate to home with hash
+      navigate(`/#${sectionId}`);
     }
     handleMobileMenuClose();
   };
@@ -173,13 +193,13 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
           <Toolbar disableGutters sx={{ minHeight: '64px !important', gap: 2 }}>
             {/* Logo Section */}
             <Box 
-              component={Link} 
-              to="/" 
+              onClick={handleHomeClick}
               sx={{ 
                 display: 'flex',
                 alignItems: 'center',
                 textDecoration: 'none',
-                mr: { md: 4 }
+                mr: { md: 4 },
+                cursor: 'pointer'
               }}
             >
               <LogoContainer>
@@ -206,7 +226,7 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
               {!isLoggedIn ? (
                 <>
                   <Button
-                    onClick={() => scrollToSection('top')}
+                    onClick={handleHomeClick}
                     sx={{
                       color: 'text.primary',
                       fontWeight: 600,
@@ -472,7 +492,7 @@ export default function Navigation({ onLoginClick, onRegisterClick }) {
       >
         {!isLoggedIn ? (
           <>
-            <MenuItem onClick={() => scrollToSection('top')}>
+            <MenuItem onClick={handleHomeClick}>
               <Home sx={{ mr: 1.5 }} /> Home
             </MenuItem>
             <MenuItem onClick={() => scrollToSection('features')}>

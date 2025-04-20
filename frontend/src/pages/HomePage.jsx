@@ -319,7 +319,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Container>
 
       {/* Why Choose Us Section */}
-      <Box ref={featuresRef} id="features" sx={{ py: 12 }}>
+      <Box ref={featuresRef} id="features" sx={{ py: 12, pt: 6, scrollMarginTop: '96px', position: 'relative'}}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 10 }}>
             <Typography 
@@ -404,7 +404,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* How It Works */}
-      <Box ref={processRef} id="process" sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
+      <Box ref={processRef} id="process" sx={{ py: 8, pt: 6, crollMarginTop: '96px', bgcolor: '#F7FAFF', position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -513,7 +513,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
                   >
                     {step.step}
                   </Box>
-                  <CardContent sx={{ pt: 8, pb: 4, px: 4 }}>
+                  <CardContent sx={{ pt: 6, pb: 4, px: 4 }}>
                     <Box 
                       sx={{ 
                         display: 'flex',
@@ -546,7 +546,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* Pricing Section */}
-      <Box ref={pricingRef} id="pricing" sx={{ py: 12, bgcolor: '#F7FAFF', position: 'relative' }}>
+      <Box ref={pricingRef} id="pricing" sx={{ py: 12, pt: 4, bgcolor: '#F7FAFF', position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -713,7 +713,7 @@ export default function HomePage({ onGetStartedClick, onLoginClick }) {
       </Box>
 
       {/* Testimonials */}
-      <Box ref={testimonialsRef} id="testimonials" sx={{ py: 12, position: 'relative' }}>
+      <Box ref={testimonialsRef} id="testimonials" sx={{ py: 12,pt: 4, position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',

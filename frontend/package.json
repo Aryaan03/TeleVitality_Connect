@@ -24,6 +24,7 @@
     "@mui/material": "^6.4.6",
     "@mui/system": "^7.0.1",
     "@syncfusion/ej2-react-schedule": "^28.2.7",
+    "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
