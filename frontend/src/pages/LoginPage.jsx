@@ -17,11 +17,12 @@ import { useState } from 'react';
 import { authService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-export default function LoginPage({ open, handleClose, openForgotPassword }) {
+export default function LoginPage({ open, handleClose, openForgotPassword, setUserType }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const handleForgotPassword = () => {
     handleClose();
+    setUserType('patient');
     openForgotPassword();
   };
 

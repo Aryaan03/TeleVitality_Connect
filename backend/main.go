@@ -38,6 +38,7 @@ func main() {
 
 	r.HandleFunc("/api/docregister", authHandler.DoctorRegister).Methods("POST")
 	r.HandleFunc("/api/doclogin", authHandler.DoctorLogin).Methods("POST")
+	r.HandleFunc("/api/doc-reset-password", authHandler.ResetPasswordDoctor).Methods("POST")
 
 	// Protected Patient Routes
 	protected := r.PathPrefix("/api/protected").Subrouter()

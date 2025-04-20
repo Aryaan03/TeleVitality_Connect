@@ -276,5 +276,15 @@ export const authService = {
     });
     if (!response.ok) throw new Error(await response.text());
     return response.json();
+  },
+
+  async resetPasswordDoc({ reset_token, new_password }) {
+    const response = await fetch(`${API_URL}/doc-reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reset_token, new_password }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
   }
 };

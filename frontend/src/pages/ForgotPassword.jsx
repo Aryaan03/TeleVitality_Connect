@@ -15,7 +15,7 @@ import { Close, Email, Lock, VpnKey } from '@mui/icons-material';
 import { useState } from 'react';
 import { authService } from '../services/api'; // Make sure it includes forgotPassword and verifyOTP
 
-export default function ForgotPassword({ open, handleClose, openLogin }) {
+export default function ForgotPassword({ open, handleClose, openLogin, openDoctorLogin, userType }) {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [serverError, setServerError] = useState('');
@@ -56,14 +56,27 @@ const handleVerifyOTP = async (values) => {
     });
 
     // Then reset password using the token
-    await authService.resetPassword({
-      reset_token: verifyResponse.reset_token,
-      new_password: values.newPassword
-    });
+    if (userType == 'patient'){
+      await authService.resetPassword({
+        reset_token: verifyResponse.reset_token,
+        new_password: values.newPassword
+      });
+    }
+    else {
+      await authService.resetPasswordDoc({
+        reset_token: verifyResponse.reset_token,
+        new_password: values.newPassword
+      });
+    }
 
     setServerError('');
     handleClose();
-    openLogin();
+    if (userType == 'patient'){
+      openLogin();
+    }
+    else{
+      openDoctorLogin();
+    }
   } catch (err) {
     let errorMessage = 'Password reset failed';
   

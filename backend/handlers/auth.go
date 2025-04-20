@@ -491,3 +491,63 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		"message": "Password updated successfully",
 	})
 }
+
+func (h *AuthHandler) ResetPasswordDoctor(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ResetToken  string `json:"reset_token"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Validate JWT token
+	token, err := jwt.Parse(req.ResetToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, `{"error":"Invalid token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["scope"] != "password_reset" {
+		http.Error(w, `{"error":"Invalid token claims"}`, http.StatusUnauthorized)
+		return
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok || email == "" {
+		http.Error(w, `{"error":"Invalid email in token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Update password
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, `{"error":"Password hashing failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.DB.Exec(
+		`UPDATE doctors 
+         SET password_hash = $1 
+         WHERE email = $2`,
+		hashedPass, email,
+	)
+	if err != nil {
+		http.Error(w, `{"error":"Password update failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Password updated successfully",
+	})
+}

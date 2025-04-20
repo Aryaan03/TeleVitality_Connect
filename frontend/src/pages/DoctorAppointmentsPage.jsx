@@ -55,7 +55,7 @@ export default function DoctorAppointmentsPage() {
   const [cancellationReason, setCancellationReason] = useState('');
 
   // Group appointments by status
-  const groupedAppointments = appointments.reduce((acc, appointment) => {
+  const groupedAppointments = appointments?.reduce((acc, appointment) => {
     const status = appointment.status || 'Scheduled';
     if (!acc[status]) {
       acc[status] = [];
@@ -78,9 +78,9 @@ export default function DoctorAppointmentsPage() {
       try {
         setLoading(true);
         const response = await appointmentService.getDoctorAppointments();
-        setAppointments(response);
-
-        const initialNotes = response.reduce((acc, appt) => {
+        const validAppointments = Array.isArray(response) ? response : [];
+        setAppointments(validAppointments);
+        const initialNotes = validAppointments.reduce((acc, appt) => {
           acc[appt.id] = appt.notes || ""; 
           return acc;
         }, {});
@@ -323,13 +323,13 @@ export default function DoctorAppointmentsPage() {
         </Alert>
       )}
 
-      {!loading && appointments && appointments.length === 0 && (
+      {!loading && Array.isArray(appointments) && appointments?.length === 0 && (
         <Alert severity="info">
           You have no scheduled appointments.
         </Alert>
       )}
 
-      {!loading && appointments && appointments.length > 0 && (
+      {!loading && Array.isArray(appointments) && appointments?.length > 0 && (
         <Box>
           <Tabs
             value={appointmentStatusTab}
