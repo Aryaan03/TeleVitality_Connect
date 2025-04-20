@@ -65,9 +65,23 @@ const handleVerifyOTP = async (values) => {
     handleClose();
     openLogin();
   } catch (err) {
-    const errorMessage = err.response?.status === 401 
-      ? 'Invalid or expired code' 
-      : err.message || 'Password reset failed';
+    let errorMessage = 'Password reset failed';
+  
+    if (err.message) {
+      try {
+        const parsed = JSON.parse(err.message);
+        if (parsed.error) {
+          errorMessage = parsed.error; 
+        }
+      } catch (e) {
+        errorMessage = err.message;
+      }
+    }
+  
+    if (err.response?.status === 401) {
+      errorMessage = 'Invalid or expired code';
+    }
+  
     setServerError(errorMessage);
   } finally {
     setLoading(false);
