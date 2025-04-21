@@ -336,9 +336,9 @@ func (h *AuthHandler) SendResetCode(w http.ResponseWriter, r *http.Request) {
 	//Generated code expires in 10 minutes
 	_, err := h.DB.Exec(
 		`INSERT INTO password_reset_codes (email, code, expires_at)
-		 VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '10 minutes')
+		 VALUES ($1, $2, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') + INTERVAL '10 minutes')
 		 ON CONFLICT (email) DO UPDATE
-		 SET code = $2, expires_at = CURRENT_TIMESTAMP + INTERVAL '10 minutes'`,
+		 SET code = $2, expires_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') + INTERVAL '10 minutes'`,
 		req.Email, codeStr,
 	)
 
@@ -396,6 +396,8 @@ func (h *AuthHandler) VerifyResetCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("Expires At:", expiresAt)
+	fmt.Println("Current Time:", time.Now())
 	if time.Now().UTC().After(expiresAt.UTC()) {
 		http.Error(w, `{"error":"Expired code"}`, http.StatusUnauthorized)
 		return
