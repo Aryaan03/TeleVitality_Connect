@@ -16,10 +16,13 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 type AppointmentHandler struct {
-	DB *sql.DB
+	DB          *sql.DB
+	SendGridKey string
 }
 
 func (h *AppointmentHandler) GetSpecialties(w http.ResponseWriter, r *http.Request) {
@@ -184,6 +187,56 @@ func (h *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 				log.Println("Error storing file:", err)
 				continue
 			}
+		}
+
+		var (
+			patientEmail, patientFirstName  string
+			doctorFirstName, doctorLastName string
+		)
+
+		err = h.DB.QueryRow(`
+		SELECT u.email, p.first_name, d.first_name, d.last_name 
+		FROM users u
+		JOIN profiles p ON u.id = p.user_id
+		JOIN doctor_profiles d ON d.user_id = $1
+		WHERE u.id = $2`,
+			doctorID, int(patientID)).Scan(&patientEmail, &patientFirstName, &doctorFirstName, &doctorLastName)
+		if err != nil {
+			log.Println("Error fetching user details:", err)
+			// Continue without failing the booking
+		} else {
+			// Format appointment time
+			date, _ := appointmentTime["date"].(string)
+			timeStr, _ := appointmentTime["time"].(string)
+
+			// Create email content
+			from := mail.NewEmail("TeleVitality", "potamsetvssruchi@ufl.edu")
+			to := mail.NewEmail(patientFirstName, patientEmail)
+			subject := "Appointment Confirmation"
+
+			plainContent := fmt.Sprintf(
+				`Hi %s,
+		
+			Your appointment with Dr. %s %s is confirmed for:
+			Date: %s
+			Time: %s
+		
+			Virtual Meeting Link: %s
+		
+			Please arrive 5 minutes early. For rescheduling, contact our support team.
+		
+			Thank you,
+			TeleVitality Team`,
+				patientFirstName, doctorFirstName, doctorLastName, date, timeStr, meetLink)
+			message := mail.NewSingleEmail(from, subject, to, plainContent, "")
+			client := sendgrid.NewSendClient(h.SendGridKey)
+
+			// Send email in background
+			go func() {
+				if _, err := client.Send(message); err != nil {
+					log.Printf("Failed to send confirmation email: %v", err)
+				}
+			}()
 		}
 
 		w.Header().Set("Content-Type", "application/json")

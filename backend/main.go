@@ -25,7 +25,7 @@ func main() {
 	authHandler := &handlers.AuthHandler{DB: db, SendGridKey: os.Getenv("SENDGRID_API_KEY")}
 	profileHandler := &handlers.ProfileHandler{DB: db}
 	doctorProfileHandler := &handlers.DoctorProfileHandler{DB: db}
-	appointmentHandler := &handlers.AppointmentHandler{DB: db}
+	appointmentHandler := &handlers.AppointmentHandler{DB: db, SendGridKey: os.Getenv("SENDGRID_API_KEY")}
 
 	r := mux.NewRouter()
 
