@@ -67,7 +67,7 @@ Cypress was chosen for its unique features and benefits:
 - **Cross-Browser Testing:** Supports testing across multiple browsers like Chrome, Firefox, and Edge.
 - **All-in-One Framework:** Combines test writing, execution, and debugging in a single tool.
 
-### Tests Added 
+### Unit Tests Added 
 
 
 
