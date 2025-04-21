@@ -165,10 +165,10 @@ Cypress was chosen for its unique features and benefits:
 - Books an appointment by accepting a JSON payload with doctorId, appointmentTime, and other optional fields.
 - After a successful booking, a confirmation email is automatically sent to the patient via SendGrid.
 The email includes:
-- Patient’s first name
-- Doctor’s full name
-- Appointment date and time
-- Virtual meeting link
+  - Patient’s first name
+  - Doctor’s full name
+  - Appointment date and time
+  - Virtual meeting link
 
 ### **Password Reset Endpoints**
 - **POST `/api/auth/send-reset-code`**
