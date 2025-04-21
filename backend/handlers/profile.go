@@ -96,7 +96,14 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		var profile models.Profile
 		if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
 			fmt.Println("JSON decode error:", err)
-			http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
+			// More specific error message based on error type
+			var errorMsg string
+			if strings.Contains(err.Error(), "cannot unmarshal") {
+				errorMsg = "Invalid data types in request body"
+			} else {
+				errorMsg = "Invalid request body"
+			}
+			http.Error(w, fmt.Sprintf(`{"error": "%s"}`, errorMsg), http.StatusBadRequest)
 			return
 		}
 
@@ -131,12 +138,33 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println("Database error:", err)
+			// Check for constraint violation
+			var statusCode int
+			var errorMsg string
+			if strings.Contains(err.Error(), "null value") {
+				statusCode = http.StatusBadRequest
+				errorMsg = "Missing required fields"
+			} else {
+				statusCode = http.StatusInternalServerError
+				errorMsg = "Failed to update profile"
+			}
+			http.Error(w, fmt.Sprintf(`{"error": "%s"}`, errorMsg), statusCode)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			fmt.Println("Error getting rows affected:", err)
 			http.Error(w, `{"error": "Failed to update profile"}`, http.StatusInternalServerError)
 			return
 		}
 
-		rowsAffected, _ := result.RowsAffected()
 		fmt.Println("Rows affected:", rowsAffected)
+
+		if rowsAffected == 0 {
+			http.Error(w, `{"error": "No profile was updated or created"}`, http.StatusBadRequest)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated successfully"})
