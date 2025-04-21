@@ -17,9 +17,9 @@
   - Enhanced input validation and error responses across all endpoints.
 
 - **Email Notification on Appointment Booking**
-- Implemented in `BookAppointment` backend route.
-- Uses SendGrid API to email the patient details of their confirmed appointment.
-- Triggered automatically after a successful booking.
+  - Implemented in `BookAppointment` backend route.
+  - Uses SendGrid API to email the patient details of their confirmed appointment.
+  - Triggered automatically after a successful booking.
 ---
 
 ### **Frontend**
