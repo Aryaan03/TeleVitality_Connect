@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -138,7 +139,7 @@ func TestBookAppointment(t *testing.T) {
 	fileWriter.Write(fileContent)
 	writer.Close()
 
-	req := httptest.NewRequest("POST", "/api/book", body)
+	req := httptest.NewRequest("POST", "/api/appointments", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
@@ -625,7 +626,7 @@ func TestBookAppointment_InvalidInput(t *testing.T) {
 	err = writer.Close()
 	assert.NoError(t, err)
 
-	req, err := http.NewRequest("POST", "/api/book", body)
+	req, err := http.NewRequest("POST", "/api/appointments", body)
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer "+tokenString)
@@ -664,7 +665,7 @@ func TestBookAppointment_DatabaseError(t *testing.T) {
 	writer.WriteField("appointmentTime", `{"date": "2024-03-10", "time": "10:00"}`)
 	writer.Close()
 
-	req := httptest.NewRequest("POST", "/api/book", body)
+	req := httptest.NewRequest("POST", "/api/appointments", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer "+tokenString)
 	rec := httptest.NewRecorder()
@@ -990,4 +991,112 @@ func TestUpdateAppointmentNotes(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestBookAppointment_InvalidToken(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := AppointmentHandler{DB: db}
+
+	req := httptest.NewRequest("POST", "/api/appointments", nil)
+	req.Header.Set("Authorization", "Bearer invalidtoken")
+	rec := httptest.NewRecorder()
+
+	handler.BookAppointment(rec, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Invalid token")
+	mock.ExpectationsWereMet()
+}
+
+func TestBookAppointment_NonMultipartForm(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := AppointmentHandler{DB: db}
+
+	// Regular form data (not multipart)
+	form := url.Values{}
+	form.Add("doctorId", "789")
+	form.Add("problem", "Headache")
+
+	// Mock JWT token
+	userID := 456 // Patient ID
+	tokenString, err := generateTestToken(userID)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/api/appointments", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.BookAppointment(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Failed to parse form data")
+	mock.ExpectationsWereMet()
+}
+
+func TestBookAppointment_InvalidDoctorID(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := AppointmentHandler{DB: db}
+
+	// Mock JWT token
+	userID := 456 // Patient ID
+	tokenString, err := generateTestToken(userID)
+	assert.NoError(t, err)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("doctorId", "notanumber") // Invalid format
+	writer.WriteField("problem", "Headache")
+	writer.Close()
+
+	req := httptest.NewRequest("POST", "/api/appointments", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.BookAppointment(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Invalid or missing doctorId")
+	mock.ExpectationsWereMet()
+}
+
+func TestBookAppointment_InvalidAppointmentTime(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	// Mock JWT token
+	userID := 456 // Patient ID
+	tokenString, err := generateTestToken(userID)
+	assert.NoError(t, err)
+
+	handler := AppointmentHandler{DB: db}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("doctorId", "789")
+	writer.WriteField("problem", "Headache")
+	writer.WriteField("appointmentTime", `invalid-json`) // Malformed JSON
+	writer.Close()
+
+	req := httptest.NewRequest("POST", "/api/appointments", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+	rec := httptest.NewRecorder()
+
+	handler.BookAppointment(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Invalid appointment time format")
+	mock.ExpectationsWereMet()
 }
