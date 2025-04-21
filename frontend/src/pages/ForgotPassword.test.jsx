@@ -2,61 +2,66 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ForgotPassword from './ForgotPassword';
 import { BrowserRouter } from 'react-router-dom';
-import { authService } from '../services/api';
 
+// Mock the API service
 jest.mock('../services/api', () => ({
   authService: {
-    resetPassword: jest.fn(),
-  },
+    forgotPassword: jest.fn(() => Promise.resolve({ message: 'Code sent' })),
+    verifyResetCode: jest.fn(() => Promise.resolve({ reset_token: 'fake_token' })),
+    resetPassword: jest.fn(() => Promise.resolve({ message: 'Password updated' })),
+    resetPasswordDoc: jest.fn(() => Promise.resolve({ message: 'Password updated' }))
+  }
 }));
 
-const renderComponent = () => {
+const renderComponent = (props = {}) => {
   render(
     <BrowserRouter>
-      <ForgotPassword />
+      <ForgotPassword
+        open={true}
+        handleClose={jest.fn()}
+        openLogin={jest.fn()}
+        openDoctorLogin={jest.fn()}
+        userType="patient"
+        {...props}
+      />
     </BrowserRouter>
   );
 };
 
 describe('ForgotPassword Component', () => {
-  test('renders form fields and submits successfully', async () => {
-    authService.resetPassword.mockResolvedValueOnce(); // simulate success
-
+  test('renders email form and submits it', async () => {
     renderComponent();
 
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'email'), {
-      target: { value: 'test@example.com' },
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+    const submitBtn = screen.getByRole('button', { name: /send verification code/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/verification code/i)).toBeInTheDocument();
     });
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'newPassword'), {
-      target: { value: 'abc123' },
+  });
+
+  test('renders otp form and submits password reset', async () => {
+    renderComponent();
+
+    // Simulate first step
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /send verification code/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
     });
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'confirmPassword'), {
-      target: { value: 'abc123' },
-    });
+
+    fireEvent.change(screen.getByLabelText(/verification code/i), { target: { value: '123456' } });
+    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'newPass123' } });
 
     fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
 
     await waitFor(() => {
-      expect(authService.resetPassword).toHaveBeenCalledWith('test@example.com', 'abc123');
-      expect(screen.getByText(/password reset successful/i)).toBeInTheDocument();
+      expect(screen.queryByText(/check your email for the verification code/i)).toBeInTheDocument();
     });
-  });
-
-  test('shows error if passwords do not match', () => {
-    renderComponent();
-
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'email'), {
-      target: { value: 'test@example.com' },
-    });
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'newPassword'), {
-      target: { value: 'abc123' },
-    });
-    fireEvent.change(screen.getByLabelText((_, el) => el.id === 'confirmPassword'), {
-      target: { value: 'wrongpass' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
-
-    expect(screen.getByText(/passwords don't match/i)).toBeInTheDocument();
   });
 });
