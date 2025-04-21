@@ -16,6 +16,10 @@
   - Standardized all timestamps to UTC for reliable expiry and scheduling.
   - Enhanced input validation and error responses across all endpoints.
 
+- **Email Notification on Appointment Booking**
+- Implemented in `BookAppointment` backend route.
+- Uses SendGrid API to email the patient details of their confirmed appointment.
+- Triggered automatically after a successful booking.
 ---
 
 ### **Frontend**
@@ -139,10 +143,19 @@ Cypress was chosen for its unique features and benefits:
 
 ### Unit Tests Added 
 
+- `DoctorProfilePage.test.jsx`: Tested all form fields and API interactions
+- `ProfilePage.test.jsx`: Smoke tested rendering and error handling
+- `HomePage.test.jsx`: Validated hero section, navigation links, and footer
 
 
 ### **Cypress E2E Tests**
 
+- `navigation.cy.js`: Navigation links like Home, Features, Pricing
+- `loginRedirect.cy.js`: Redirect unauthenticated users from `/profile` to `/login`
+- `patientRegisterModal.cy.js`: Open patient register modal from home page
+- `forgotPassword.cy.js`: Flow for sending verification code
+- `Patient_Login.cy.js`: Tested login and forgot password modal interaction
+- `homePage.cy.js`: Validated hero section, pricing, features, testimonials
 
 ---
 
