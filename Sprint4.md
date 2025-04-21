@@ -31,6 +31,15 @@
   - Refactored test structure for maintainability and coverage.
 
 - **General UI/UX**
+  - **Consistent Styling** – Uniform shadows, borders, and rounded corners.
+  - **Interactive Hover States** – Buttons/cards with smooth animations.
+  - **Icon Integration** – Relevant icons for better visual cues.
+  - **Focus Indicators** – Glow/highlight for active form fields.
+  - **Gradient Accents** – Buttons/headers with subtle gradients.
+  - **Responsive Typography** – Font sizes that adapt to screen size.
+  - **Micro-Interactions** – Small animations (e.g., hover, focus).
+  - **Clear Visual Hierarchy** – Bold headings with divider accents.
+  - **Accessible Contrast** – Readable text and color choices.
   - Improved loading states, error alerts, and empty state messaging.
   - Enhanced accessibility and responsive design across all main pages.
 
@@ -44,7 +53,22 @@
 
 ## 3. Frontend Unit & Cypress Tests
 
-### **Unit Tests (React Testing Library + Jest)**
+## **FrontEnd E2E Testing**
+
+### Overview
+In Sprint 4, Cypress was used as the primary testing framework to ensure the quality and functionality of various features in the application. Cypress's ability to perform end-to-end, integration, and unit testing directly in the browser made it an ideal choice for validating user workflows and application behavior.
+
+### Why Cypress?
+Cypress was chosen for its unique features and benefits:
+
+- **Real-Time Reloads:** Automatically reruns tests upon saving, speeding up development.
+- **Automatic Waiting:** Eliminates the need for explicit waits by waiting for DOM elements, animations, and AJAX calls to complete.
+- **Ease of Debugging:** Provides detailed logs and snapshots for debugging failed tests.
+- **Cross-Browser Testing:** Supports testing across multiple browsers like Chrome, Firefox, and Edge.
+- **All-in-One Framework:** Combines test writing, execution, and debugging in a single tool.
+
+### Tests Added 
+
 
 
 ### **Cypress E2E Tests**
