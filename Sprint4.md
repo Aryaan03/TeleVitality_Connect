@@ -47,7 +47,77 @@
 
 ## 2. Backend Unit Tests
 
+### **Appointment Tests (`appointment_test.go`)**
+- **`TestUpdateAppointmentNotes`**
+  - Validates the endpoint for updating doctor notes after an appointment.
+  - **Success Case:**
+    - Updates appointment notes for the given ID.
+    - Confirms update via HTTP 200 and expected response body.
+    - Verifies mock expectations, including correct query execution and parameter matching.
+  - **Edge Cases:**
+    - Invalid appointment ID in URL.
+    - Empty or malformed request body.
+    - Missing notes field.
 
+- **TestBookAppointment_InvalidToken**
+  - Ensures proper handling of authentication failures:
+    - Rejects malformed/missing JWT tokens
+    - Validates token signature and expiration
+
+- **TestBookAppointment_NonMultipartForm**
+  - Tests error handling for invalid form submissions:
+    - Detects non-multipart form data
+    - Validates Content-Type header requirements
+
+- **TestBookAppointment_InvalidDoctorID**
+  - Verifies input validation:
+    - Rejects non-numeric doctor IDs
+    - Handles missing doctor ID field
+
+- **TestBookAppointment_InvalidAppointmentTime**
+  - Tests JSON parsing robustness:
+    - Catches malformed JSON in time field
+    - Validates required time format
+
+### **Auth Tests (`auth_test.go`)**
+- **`TestSendResetCode`**
+  - Tests the password reset code sending logic:
+  - **Success:**
+    - Mocks DB insert into `password_reset_codes`.
+    - Returns success response if the insert succeeds.
+  - **DatabaseError:**
+    - Simulates DB failure and expects HTTP 500 with error message.
+  - **InvalidRequest:**
+    - Ensures malformed JSON is rejected with HTTP 400.
+
+- **`TestVerifyResetCode`** 
+  - Covers email-based reset code verification:
+  - **Success:**
+    - Validates code and expiry time.
+    - Deletes code post-verification.
+    - Returns a reset token upon success.
+  - **ExpiredCode:**
+    - Rejects expired reset codes with HTTP 401.
+  - **InvalidCode:**
+    - Handles mismatched code inputs (even if email is valid).
+  - **NoCodeFound:**
+    - Returns appropriate error if no code is associated with the email.
+
+- **`TestResetPassword`** 
+  - Tests the flow for resetting the user's password using a valid token:
+  - **Success:**
+    - Updates hashed password in the database.
+    - Confirms with HTTP 200 and success message.
+  - **InvalidToken:**
+    - Handles malformed or expired reset tokens, rejecting with HTTP 401.
+  - **MalformedBody / MissingFields:**
+    - Ensures that bad request bodies or missing fields are rejected.
+
+- **TestResetPasswordDoctor**
+  - **Success case:** 
+    - Specific test for doctor password updates.
+  - **Failure cases:** 
+    - Mirrors patient password reset failures.
 
 ---
 
