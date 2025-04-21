@@ -10,12 +10,6 @@ TeleVitality Connect is a comprehensive telemedicine platform designed to transf
 
 TeleVitality Connect integrates advanced functionalities such as patient appointment scheduling, electronic health record (EHR) management, and secure video consultations powered by WebRTC, ensuring a well-rounded virtual care experience. Additionally, features like prescription tracking, billing, and payment gateway integration simplify administrative workflows, enabling providers to focus on delivering quality care.
 
-### Features:
-
-- User Authentication & Authorization: Secure, role-based access for patients and doctors.
-- Patient and Doctor Profiles: Centralized and customizable profiles for streamlined management.
-- Appointment Scheduling and Management: Easy booking, rescheduling, and reminders for improved time management.
-- Secure Video Consultations: High-quality, real-time communication for collaborative care.
 
 ## Team Members
 
