@@ -80,11 +80,19 @@ describe('Patient Login Tests', () => {
     cy.contains('Welcome Back').should('not.exist');
   });
 
-  it('should navigate to forgot password page', () => {
-    // More reliable navigation test
+  it('should open forgot password modal when clicking "Forgot Password?"', () => {
+    // Click the "Forgot Password?" button
     cy.contains('button', 'Forgot Password?').click();
-    cy.url({ timeout: 10000 }).should('include', '/reset-password');
+  
+    // ✅ This matches the input element you have in your ForgotPassword.jsx
+    cy.get('input[name="email"]').should('exist').and('be.visible');
+  
+    // ✅ This matches your visible "Send Verification Code" button
+    cy.contains('Send Verification Code', { matchCase: false }).should('be.visible');
   });
+  
+  
+  
 
   it('should navigate to sign up page', () => {
     // More reliable navigation test
