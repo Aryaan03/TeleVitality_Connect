@@ -56,7 +56,7 @@
 ## **FrontEnd E2E Testing**
 
 ### Overview
-In Sprint 4, Cypress was used as the primary testing framework to ensure the quality and functionality of various features in the application. Cypress's ability to perform end-to-end, integration, and unit testing directly in the browser made it an ideal choice for validating user workflows and application behavior.
+In Sprint 4, Unit tests and Cypress E2E testing was used as the primary testing framework to ensure the quality and functionality of various features in the application. Cypress's ability to perform end-to-end, integration, and unit testing directly in the browser made it an ideal choice for validating user workflows and application behavior.
 
 ### Why Cypress?
 Cypress was chosen for its unique features and benefits:
